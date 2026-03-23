@@ -88,7 +88,7 @@ export default function Organizacoes() {
                     <TableCell className="hidden md:table-cell text-muted-foreground">{org.cnpj || '—'}</TableCell>
                     <TableCell className="hidden lg:table-cell text-muted-foreground">{org.cidade_estado || '—'}</TableCell>
                     <TableCell>
-                      <Badge variant={org.ativo ? 'default' : 'secondary'}>
+                      <Badge className={org.ativo ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-red-600 text-white hover:bg-red-700'}>
                         {org.ativo ? 'Ativo' : 'Inativo'}
                       </Badge>
                     </TableCell>
