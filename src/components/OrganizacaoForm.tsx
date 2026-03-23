@@ -76,7 +76,7 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
 
       if (organizacao?.id) {
         const { error } = await supabase
-          .from('organizacoes')
+          .from('organizacao')
           .update(payload)
           .eq('id', organizacao.id);
         if (error) throw error;
