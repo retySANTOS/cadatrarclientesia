@@ -19,7 +19,7 @@ export default function Organizacoes() {
   const fetchOrgs = useCallback(async () => {
     setLoading(true);
     // RLS handles multi-tenancy filtering on the server
-    const { data, error } = await supabase.from('organizacoes').select('*').order('nome');
+    const { data, error } = await supabase.from('organizacao').select('*').order('nome');
     if (error) {
       toast.error('Erro ao carregar organizações');
     } else {
@@ -32,7 +32,7 @@ export default function Organizacoes() {
 
   const handleDelete = async (org: Organizacao) => {
     if (!confirm(`Excluir "${org.nome}"?`)) return;
-    const { error } = await supabase.from('organizacoes').delete().eq('id', org.id!);
+    const { error } = await supabase.from('organizacao').delete().eq('id', org.id!);
     if (error) {
       toast.error('Erro ao excluir');
     } else {

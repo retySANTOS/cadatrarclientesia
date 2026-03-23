@@ -10,8 +10,8 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       const [orgsRes, ativasRes, equipeRes] = await Promise.all([
-        supabase.from('organizacoes').select('id', { count: 'exact', head: true }),
-        supabase.from('organizacoes').select('id', { count: 'exact', head: true }).eq('ativo', true),
+        supabase.from('organizacao').select('id', { count: 'exact', head: true }),
+        supabase.from('organizacao').select('id', { count: 'exact', head: true }).eq('ativo', true),
         supabase.from('perfis').select('id', { count: 'exact', head: true }),
       ]);
       setStats({

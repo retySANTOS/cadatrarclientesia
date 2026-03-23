@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchPerfilAndAdmin = async (userId: string) => {
     try {
       const [perfilRes, adminRes] = await Promise.all([
-        supabase.from('perfis').select('*').eq('user_id', userId).single(),
+        supabase.from('perfis').select('*').eq('id', userId).single(),
         supabase.rpc('is_admin'),
       ]);
 

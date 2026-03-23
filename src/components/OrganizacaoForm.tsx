@@ -76,14 +76,14 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
 
       if (organizacao?.id) {
         const { error } = await supabase
-          .from('organizacoes')
+          .from('organizacao')
           .update(payload)
           .eq('id', organizacao.id);
         if (error) throw error;
         toast.success('Organização atualizada');
       } else {
         payload.created_by = user?.id;
-        const { error } = await supabase.from('organizacoes').insert(payload);
+        const { error } = await supabase.from('organizacao').insert(payload);
         if (error) throw error;
         toast.success('Organização criada');
       }
