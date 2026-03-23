@@ -32,7 +32,7 @@ export default function Organizacoes() {
 
   const handleDelete = async (org: Organizacao) => {
     if (!confirm(`Excluir "${org.nome}"?`)) return;
-    const { error } = await supabase.from('organizacoes').delete().eq('id', org.id!);
+    const { error } = await supabase.from('organizacao').delete().eq('id', org.id!);
     if (error) {
       toast.error('Erro ao excluir');
     } else {
