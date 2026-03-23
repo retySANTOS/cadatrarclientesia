@@ -167,15 +167,9 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
               <Label>Endereço Completo</Label>
               <Input value={form.endereco_completo} onChange={(e) => update('endereco_completo', e.target.value)} />
             </div>
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <Switch checked={form.ativado} onCheckedChange={(v) => update('ativado', v)} />
-                <Label>Ativado</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch checked={form.ativo} onCheckedChange={(v) => update('ativo', v)} />
-                <Label>Ativo</Label>
-              </div>
+            <div className="flex items-center gap-2">
+              <Switch checked={form.ativado} onCheckedChange={(v) => update('ativado', v)} />
+              <Label>Status da Organização</Label>
             </div>
             <div className="space-y-2">
               <Label>Mensagem de Boas-vindas</Label>
