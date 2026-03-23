@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface Perfil {
   id: string;
-  user_id: string;
   nome: string;
   email: string;
   pode_criar: boolean;
