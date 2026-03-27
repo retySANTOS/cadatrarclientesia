@@ -76,6 +76,7 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
     try {
       const payload = { ...form };
       delete (payload as any).id;
+      delete (payload as any).webhook_url;
 
       if (organizacao?.id) {
         const { error } = await supabase
