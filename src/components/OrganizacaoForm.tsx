@@ -226,7 +226,19 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
 
           <TabsContent value="ia" className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label>Prompt</Label>
+              <div className="flex items-center justify-between">
+                <Label>Prompt</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1 text-xs text-muted-foreground"
+                  onClick={() => setPromptExpanded(true)}
+                >
+                  <Maximize2 className="h-3.5 w-3.5" />
+                  Expandir
+                </Button>
+              </div>
               <Textarea value={form.prompt} onChange={(e) => update('prompt', e.target.value)} rows={6} placeholder="Prompt de IA para o atendimento..." />
             </div>
             <div className="space-y-2">
