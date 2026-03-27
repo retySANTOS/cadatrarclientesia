@@ -308,5 +308,23 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
         </div>
       </DialogContent>
     </Dialog>
+
+      <Dialog open={promptExpanded} onOpenChange={setPromptExpanded}>
+        <DialogContent className="max-w-4xl h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Editor de Prompt</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={form.prompt}
+            onChange={(e) => update('prompt', e.target.value)}
+            className="flex-1 resize-none font-mono text-sm"
+            placeholder="Prompt de IA para o atendimento..."
+          />
+          <div className="flex justify-end pt-2">
+            <Button onClick={() => setPromptExpanded(false)}>Fechar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
