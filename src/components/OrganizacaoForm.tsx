@@ -132,6 +132,7 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
   const { user } = useAuth();
   const [form, setForm] = useState<Organizacao>(emptyOrg);
   const [saving, setSaving] = useState(false);
+  const [promptExpanded, setPromptExpanded] = useState(false);
 
   useEffect(() => {
     setForm(organizacao ?? emptyOrg);
