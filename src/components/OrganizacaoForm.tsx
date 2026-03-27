@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Copy } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -18,10 +19,12 @@ export interface Organizacao {
   slug: string;
   email: string;
   telefone: string;
+  contato_financeiro: string;
   prompt: string;
   evo_instancia: string;
   link_cardapio: string;
   url_cardapio_jina: string;
+  webhook_url: string;
   logo_url: string;
   cidade_estado: string;
   endereco_completo: string;
@@ -32,8 +35,8 @@ export interface Organizacao {
 }
 
 const emptyOrg: Organizacao = {
-  nome: '', cnpj: '', slug: '', email: '', telefone: '',
-  prompt: '', evo_instancia: '', link_cardapio: '', url_cardapio_jina: '',
+  nome: '', cnpj: '', slug: '', email: '', telefone: '', contato_financeiro: '',
+  prompt: '', evo_instancia: '', link_cardapio: '', url_cardapio_jina: '', webhook_url: '',
   logo_url: '', cidade_estado: '', endereco_completo: '',
   ativado: true, ativo: true, mensagem_boas_vindas: '',
 };
@@ -133,6 +136,10 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
                 <Input value={form.telefone} onChange={(e) => update('telefone', e.target.value)} />
               </div>
             </div>
+            <div className="space-y-2">
+              <Label>Contato Financeiro</Label>
+              <Input value={form.contato_financeiro} onChange={(e) => update('contato_financeiro', e.target.value)} placeholder="Nome ou telefone do contato financeiro" />
+            </div>
           </TabsContent>
 
           <TabsContent value="ia" className="space-y-4 pt-4">
@@ -151,6 +158,27 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
             <div className="space-y-2">
               <Label>URL Cardápio Jina</Label>
               <Input value={form.url_cardapio_jina} onChange={(e) => update('url_cardapio_jina', e.target.value)} />
+            </div>
+
+            <div className="space-y-2 pt-2 border-t">
+              <Label>Webhook URL</Label>
+              <div className="flex gap-2">
+                <Input value={form.webhook_url || ''} readOnly className="bg-muted" />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(form.webhook_url || '');
+                    toast.success('Link copiado!');
+                  }}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Copie e cole esse link no Evolution → Menu Events → URL e depois salve.
+              </p>
             </div>
           </TabsContent>
 
