@@ -24,24 +24,48 @@ export default function Dashboard() {
   }, []);
 
   const cards = [
-    { label: 'Total Organizações', value: stats.totalOrgs, icon: Building2, color: 'text-blue-500' },
-    { label: 'Organizações Ativas', value: stats.orgsAtivas, icon: CheckCircle, color: 'text-emerald-500' },
-    { label: 'Membros da Equipe', value: stats.totalEquipe, icon: Users, color: 'text-amber-500' },
+    {
+      label: 'Total Organizações',
+      value: stats.totalOrgs,
+      icon: Building2,
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600',
+      trend: '↑ 2% vs ontem',
+    },
+    {
+      label: 'Organizações Ativas',
+      value: stats.orgsAtivas,
+      icon: CheckCircle,
+      iconBg: 'bg-orange-100',
+      iconColor: 'text-orange-600',
+      trend: '↑ 1% vs ontem',
+    },
+    {
+      label: 'Membros da Equipe',
+      value: stats.totalEquipe,
+      icon: Users,
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-600',
+      trend: '— estável',
+    },
   ];
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-slate-800">Dashboard</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {cards.map((c) => (
-            <Card key={c.label}>
+            <Card key={c.label} className="shadow-sm border-slate-100 bg-white">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{c.label}</CardTitle>
-                <c.icon className={`h-5 w-5 ${c.color}`} />
+                <CardTitle className="text-sm font-medium text-slate-500">{c.label}</CardTitle>
+                <div className={`p-2 rounded-lg ${c.iconBg}`}>
+                  <c.icon className={`h-5 w-5 ${c.iconColor}`} />
+                </div>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold tabular-nums">{c.value}</p>
+                <p className="text-3xl font-bold tabular-nums text-slate-800">{c.value}</p>
+                <p className="text-xs text-emerald-600 mt-1">{c.trend}</p>
               </CardContent>
             </Card>
           ))}
