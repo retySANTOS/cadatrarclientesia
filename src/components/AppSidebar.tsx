@@ -20,7 +20,8 @@ const navItems = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Organizações', url: '/organizacoes', icon: Building2 },
   { title: 'Equipe', url: '/equipe', icon: Users },
-  { title: 'Relatórios', url: '/relatorios', icon: BarChart3 },
+  { title: 'Consumo IA', url: '/relatorios', icon: BarChart3 },
+  { title: 'Consumo Detalhado', url: '/consumo-detalhado', icon: BarChart3 },
 ];
 
 export function AppSidebar() {
