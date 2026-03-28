@@ -7,45 +7,42 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { MessageSquare, Coins, DollarSign, Search } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-interface Organizacao {
-  id: string;
-  nome: string;
-  slug: string;
-  ativado: boolean;
-  total_atendimentos?: number;
-  total_tokens?: number;
-  custo_estimado?: number;
+interface ResumoFaturamento {
+  cliente: string;
+  total_atendimentos: number;
+  total_tokens: number;
+  custo_api_reais: number;
 }
 
 export default function Relatorios() {
-  const [organizacoes, setOrganizacoes] = useState<Organizacao[]>([]);
+  const [dados, setDados] = useState<ResumoFaturamento[]>([]);
   const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState<Organizacao | null>(null);
+  const [selected, setSelected] = useState<ResumoFaturamento | null>(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    supabase.from('organizacao').select('*').then(({ data }) => {
-      if (data) setOrganizacoes(data);
+    supabase.from('resumo_faturamento').select('*').then(({ data }) => {
+      if (data) setDados(data as ResumoFaturamento[]);
     });
   }, []);
 
   const filtered = useMemo(
     () => search.length > 0
-      ? organizacoes.filter(o => o.nome?.toLowerCase().includes(search.toLowerCase()))
-      : organizacoes,
-    [search, organizacoes]
+      ? dados.filter(d => d.cliente?.toLowerCase().includes(search.toLowerCase()))
+      : dados,
+    [search, dados]
   );
 
   const metrics = selected
     ? {
         atendimentos: selected.total_atendimentos ?? 0,
         tokens: selected.total_tokens ?? 0,
-        custo: selected.custo_estimado ?? 0,
+        custo: selected.custo_api_reais ?? 0,
       }
     : {
-        atendimentos: organizacoes.reduce((s, o) => s + (o.total_atendimentos ?? 0), 0),
-        tokens: organizacoes.reduce((s, o) => s + (o.total_tokens ?? 0), 0),
-        custo: organizacoes.reduce((s, o) => s + (o.custo_estimado ?? 0), 0),
+        atendimentos: dados.reduce((s, d) => s + (d.total_atendimentos ?? 0), 0),
+        tokens: dados.reduce((s, d) => s + (d.total_tokens ?? 0), 0),
+        custo: dados.reduce((s, d) => s + (d.custo_api_reais ?? 0), 0),
       };
 
   const tableData = selected ? [selected] : filtered;
@@ -60,7 +57,6 @@ export default function Relatorios() {
           </div>
         </div>
 
-        {/* Autocomplete search */}
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <div className="relative max-w-sm">
@@ -79,13 +75,13 @@ export default function Relatorios() {
               {filtered.length === 0 && (
                 <li className="px-3 py-2 text-sm text-slate-400">Nenhum resultado</li>
               )}
-              {filtered.map(org => (
+              {filtered.map((item, idx) => (
                 <li
-                  key={org.id}
+                  key={idx}
                   className="px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 hover:text-blue-700"
-                  onClick={() => { setSelected(org); setSearch(org.nome); setOpen(false); }}
+                  onClick={() => { setSelected(item); setSearch(item.cliente); setOpen(false); }}
                 >
-                  {org.nome}
+                  {item.cliente}
                 </li>
               ))}
             </ul>
@@ -101,7 +97,6 @@ export default function Relatorios() {
           </button>
         )}
 
-        {/* Metric cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="shadow-sm border-slate-100">
             <CardContent className="p-5 flex items-center gap-4">
@@ -140,14 +135,11 @@ export default function Relatorios() {
           </Card>
         </div>
 
-        {/* Data table */}
         <Card className="shadow-sm border-slate-100">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Organização</TableHead>
-                <TableHead>Slug</TableHead>
-                <TableHead className="text-center">Status</TableHead>
                 <TableHead className="text-right">Atendimentos</TableHead>
                 <TableHead className="text-right">Tokens</TableHead>
                 <TableHead className="text-right">Custo (R$)</TableHead>
@@ -156,23 +148,17 @@ export default function Relatorios() {
             <TableBody>
               {tableData.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-slate-400 py-8">
-                    Nenhuma organização encontrada
+                  <TableCell colSpan={4} className="text-center text-slate-400 py-8">
+                    Nenhum dado encontrado
                   </TableCell>
                 </TableRow>
               )}
-              {tableData.map(org => (
-                <TableRow key={org.id}>
-                  <TableCell className="font-medium">{org.nome}</TableCell>
-                  <TableCell className="text-slate-500">{org.slug}</TableCell>
-                  <TableCell className="text-center">
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${org.ativado ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
-                      {org.ativado ? 'Ativo' : 'Inativo'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">{(org.total_atendimentos ?? 0).toLocaleString('pt-BR')}</TableCell>
-                  <TableCell className="text-right">{(org.total_tokens ?? 0).toLocaleString('pt-BR')}</TableCell>
-                  <TableCell className="text-right">{(org.custo_estimado ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</TableCell>
+              {tableData.map((item, idx) => (
+                <TableRow key={idx}>
+                  <TableCell className="font-medium">{item.cliente}</TableCell>
+                  <TableCell className="text-right">{(item.total_atendimentos ?? 0).toLocaleString('pt-BR')}</TableCell>
+                  <TableCell className="text-right">{(item.total_tokens ?? 0).toLocaleString('pt-BR')}</TableCell>
+                  <TableCell className="text-right">{(item.custo_api_reais ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
