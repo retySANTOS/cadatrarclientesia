@@ -4,8 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { MessageSquare, Coins, DollarSign, Search } from 'lucide-react';
+import { MessageSquare, Coins, DollarSign, Search, FileDown, FileSpreadsheet } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { exportToPDF, exportToExcel } from '@/lib/exportUtils';
 
 interface ResumoFaturamento {
   cliente: string;
@@ -13,6 +15,13 @@ interface ResumoFaturamento {
   total_tokens: number;
   custo_api_reais: number;
 }
+
+const columns = [
+  { header: 'Organização', key: 'cliente' },
+  { header: 'Atendimentos', key: 'total_atendimentos', align: 'right' as const },
+  { header: 'Tokens', key: 'total_tokens', align: 'right' as const, format: (v: number) => (v ?? 0).toLocaleString('pt-BR') },
+  { header: 'Custo (R$)', key: 'custo_api_reais', align: 'right' as const, format: (v: number) => (v ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) },
+];
 
 export default function Relatorios() {
   const [dados, setDados] = useState<ResumoFaturamento[]>([]);
@@ -34,11 +43,7 @@ export default function Relatorios() {
   );
 
   const metrics = selected
-    ? {
-        atendimentos: selected.total_atendimentos ?? 0,
-        tokens: selected.total_tokens ?? 0,
-        custo: selected.custo_api_reais ?? 0,
-      }
+    ? { atendimentos: selected.total_atendimentos ?? 0, tokens: selected.total_tokens ?? 0, custo: selected.custo_api_reais ?? 0 }
     : {
         atendimentos: dados.reduce((s, d) => s + (d.total_atendimentos ?? 0), 0),
         tokens: dados.reduce((s, d) => s + (d.total_tokens ?? 0), 0),
@@ -47,6 +52,11 @@ export default function Relatorios() {
 
   const tableData = selected ? [selected] : filtered;
 
+  const handleExport = (type: 'pdf' | 'excel') => {
+    const fn = type === 'pdf' ? exportToPDF : exportToExcel;
+    fn({ title: 'Consumo IA', columns, data: tableData, fileName: 'consumo-ia' });
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -54,6 +64,14 @@ export default function Relatorios() {
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Consumo IA</h1>
             <p className="text-sm text-slate-500">Relatório de consumo por organização</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => handleExport('excel')} className="gap-1.5">
+              <FileSpreadsheet className="h-4 w-4" /> Excel
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleExport('pdf')} className="gap-1.5">
+              <FileDown className="h-4 w-4" /> PDF
+            </Button>
           </div>
         </div>
 
@@ -72,15 +90,10 @@ export default function Relatorios() {
           </PopoverTrigger>
           <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start" onOpenAutoFocus={e => e.preventDefault()}>
             <ul className="max-h-56 overflow-auto py-1">
-              {filtered.length === 0 && (
-                <li className="px-3 py-2 text-sm text-slate-400">Nenhum resultado</li>
-              )}
+              {filtered.length === 0 && <li className="px-3 py-2 text-sm text-slate-400">Nenhum resultado</li>}
               {filtered.map((item, idx) => (
-                <li
-                  key={idx}
-                  className="px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 hover:text-blue-700"
-                  onClick={() => { setSelected(item); setSearch(item.cliente); setOpen(false); }}
-                >
+                <li key={idx} className="px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 hover:text-blue-700"
+                  onClick={() => { setSelected(item); setSearch(item.cliente); setOpen(false); }}>
                   {item.cliente}
                 </li>
               ))}
@@ -89,10 +102,7 @@ export default function Relatorios() {
         </Popover>
 
         {selected && (
-          <button
-            className="text-xs text-blue-600 hover:underline"
-            onClick={() => { setSelected(null); setSearch(''); }}
-          >
+          <button className="text-xs text-blue-600 hover:underline" onClick={() => { setSelected(null); setSearch(''); }}>
             ← Limpar filtro
           </button>
         )}
@@ -100,33 +110,25 @@ export default function Relatorios() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="shadow-sm border-slate-100">
             <CardContent className="p-5 flex items-center gap-4">
-              <div className="rounded-lg bg-blue-100 p-3">
-                <MessageSquare className="h-5 w-5 text-blue-600" />
-              </div>
+              <div className="rounded-lg bg-blue-100 p-3"><MessageSquare className="h-5 w-5 text-blue-600" /></div>
               <div>
                 <p className="text-sm text-slate-500">Total Atendimentos</p>
                 <p className="text-2xl font-bold text-slate-800">{metrics.atendimentos.toLocaleString('pt-BR')}</p>
               </div>
             </CardContent>
           </Card>
-
           <Card className="shadow-sm border-slate-100">
             <CardContent className="p-5 flex items-center gap-4">
-              <div className="rounded-lg bg-orange-100 p-3">
-                <Coins className="h-5 w-5 text-orange-600" />
-              </div>
+              <div className="rounded-lg bg-orange-100 p-3"><Coins className="h-5 w-5 text-orange-600" /></div>
               <div>
                 <p className="text-sm text-slate-500">Consumo de Tokens</p>
                 <p className="text-2xl font-bold text-slate-800">{metrics.tokens.toLocaleString('pt-BR')}</p>
               </div>
             </CardContent>
           </Card>
-
           <Card className="shadow-sm border-slate-100">
             <CardContent className="p-5 flex items-center gap-4">
-              <div className="rounded-lg bg-emerald-100 p-3">
-                <DollarSign className="h-5 w-5 text-emerald-600" />
-              </div>
+              <div className="rounded-lg bg-emerald-100 p-3"><DollarSign className="h-5 w-5 text-emerald-600" /></div>
               <div>
                 <p className="text-sm text-slate-500">Custo Estimado</p>
                 <p className="text-2xl font-bold text-slate-800">R$ {metrics.custo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
@@ -147,11 +149,7 @@ export default function Relatorios() {
             </TableHeader>
             <TableBody>
               {tableData.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-slate-400 py-8">
-                    Nenhum dado encontrado
-                  </TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={4} className="text-center text-slate-400 py-8">Nenhum dado encontrado</TableCell></TableRow>
               )}
               {tableData.map((item, idx) => (
                 <TableRow key={idx}>
