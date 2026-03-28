@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Users, BarChart3, LogOut } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, BarChart3, LogOut, ChevronDown, FileText } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,13 +15,18 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useState } from 'react';
 
-const navItems = [
+const mainItems = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Organizações', url: '/organizacoes', icon: Building2 },
   { title: 'Equipe', url: '/equipe', icon: Users },
-  { title: 'Consumo IA', url: '/relatorios', icon: BarChart3 },
-  { title: 'Consumo Detalhado', url: '/consumo-detalhado', icon: BarChart3 },
+];
+
+const reportItems = [
+  { title: 'Consumo IA', url: '/relatorios', icon: FileText },
+  { title: 'Consumo Detalhado', url: '/consumo-detalhado', icon: FileText },
 ];
 
 export function AppSidebar() {
@@ -29,6 +34,8 @@ export function AppSidebar() {
   const collapsed = state === 'collapsed';
   const location = useLocation();
   const { signOut, user } = useAuth();
+  const isReportActive = reportItems.some(i => location.pathname === i.url);
+  const [reportsOpen, setReportsOpen] = useState(isReportActive);
 
   return (
     <Sidebar collapsible="icon" className="border-r border-slate-200 bg-slate-50 [&[data-state]]:bg-slate-50">
@@ -40,7 +47,7 @@ export function AppSidebar() {
         )}
         <SidebarGroup>
           <SidebarMenu>
-            {navItems.map((item) => (
+            {mainItems.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
                   <NavLink
@@ -55,6 +62,47 @@ export function AppSidebar() {
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
+        </SidebarGroup>
+
+        {/* Relatórios submenu */}
+        <SidebarGroup>
+          <Collapsible open={reportsOpen} onOpenChange={setReportsOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-blue-50 hover:text-blue-700 ${
+                  isReportActive ? 'text-blue-700 font-medium' : 'text-slate-600'
+                }`}
+              >
+                <BarChart3 className="h-4 w-4 shrink-0" />
+                {!collapsed && (
+                  <>
+                    <span className="flex-1 text-left">Relatórios</span>
+                    <ChevronDown className={`h-3 w-3 transition-transform ${reportsOpen ? 'rotate-180' : ''}`} />
+                  </>
+                )}
+              </button>
+            </CollapsibleTrigger>
+            {!collapsed && (
+              <CollapsibleContent>
+                <SidebarMenu className="ml-4 mt-1 border-l border-slate-200 pl-2">
+                  {reportItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild>
+                        <NavLink
+                          to={item.url}
+                          className="flex items-center gap-3 rounded-md px-3 py-1.5 text-sm text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-700"
+                          activeClassName="bg-blue-50 text-blue-700 font-medium"
+                        >
+                          <item.icon className="h-3.5 w-3.5 shrink-0" />
+                          <span>{item.title}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </CollapsibleContent>
+            )}
+          </Collapsible>
         </SidebarGroup>
       </SidebarContent>
 
