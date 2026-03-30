@@ -305,6 +305,14 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
               <p className="text-xs text-muted-foreground">
                 Copie e cole esse link no Evolution → Menu Events → URL e depois salve.
               </p>
+              <div className="pt-2">
+                <IntegrationCheck
+                  webhookUrl={form.webhook_url || ''}
+                  evoInstancia={form.evo_instancia}
+                  evoApikey={form.evo_apikey}
+                  supabaseUrl="https://supabase.projautomacao.com.br"
+                />
+              </div>
             </div>
           </TabsContent>
 
