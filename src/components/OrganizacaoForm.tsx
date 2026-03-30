@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Copy, Maximize2 } from 'lucide-react';
+import { PromptHistory } from '@/components/PromptHistory';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -229,16 +230,22 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Prompt</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 gap-1 text-xs text-muted-foreground"
-                  onClick={() => setPromptExpanded(true)}
-                >
-                  <Maximize2 className="h-3.5 w-3.5" />
-                  Expandir
-                </Button>
+                <div className="flex items-center gap-1">
+                  <PromptHistory
+                    organizacaoId={organizacao?.id}
+                    onRestore={(p) => update('prompt', p)}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 text-xs text-muted-foreground"
+                    onClick={() => setPromptExpanded(true)}
+                  >
+                    <Maximize2 className="h-3.5 w-3.5" />
+                    Expandir
+                  </Button>
+                </div>
               </div>
               <Textarea value={form.prompt} onChange={(e) => update('prompt', e.target.value)} rows={6} placeholder="Prompt de IA para o atendimento..." />
             </div>
