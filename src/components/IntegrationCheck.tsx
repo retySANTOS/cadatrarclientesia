@@ -63,7 +63,7 @@ export function IntegrationCheck({ webhookUrl, evoInstancia, evoApikey, supabase
 
       if (!evoRes.ok) {
         setStatus('config_error');
-        setDetail('Evolution API retornou erro (status ' + evoRes.status + ')');
+        setDetail('Conexão estabelecida. Verifique as configurações na Evolution API');
         return;
       }
 
