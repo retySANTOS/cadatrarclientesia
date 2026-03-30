@@ -10,10 +10,11 @@ interface Props {
   webhookUrl: string;
   evoInstancia: string;
   evoApikey: string;
+  evoBaseUrl: string;
   supabaseUrl: string;
 }
 
-export function IntegrationCheck({ webhookUrl, evoInstancia, evoApikey, supabaseUrl }: Props) {
+export function IntegrationCheck({ webhookUrl, evoInstancia, evoApikey, evoBaseUrl, supabaseUrl }: Props) {
   const [status, setStatus] = useState<Status>('idle');
   const [detail, setDetail] = useState('');
 
@@ -22,8 +23,8 @@ export function IntegrationCheck({ webhookUrl, evoInstancia, evoApikey, supabase
       toast.error('Webhook URL não disponível');
       return;
     }
-    if (!evoInstancia || !evoApikey) {
-      toast.error('Preencha a Instância EVO e a API Key antes de verificar');
+    if (!evoInstancia || !evoApikey || !evoBaseUrl) {
+      toast.error('Preencha a Instância EVO, API Key e URL Base antes de verificar');
       return;
     }
 
@@ -49,13 +50,11 @@ export function IntegrationCheck({ webhookUrl, evoInstancia, evoApikey, supabase
       }
 
       // Step 2: Check Evolution API instance
-      const evoBaseUrl = evoInstancia.includes('http')
-        ? evoInstancia.replace(/\/+$/, '')
-        : `https://${evoInstancia}`;
+      const evoBase = evoBaseUrl.replace(/\/+$/, '');
 
       let evoRes: Response;
       try {
-        evoRes = await fetch(`${evoBaseUrl}/instance/fetchInstances`, {
+        evoRes = await fetch(`${evoBase}/instance/fetchInstances?instanceName=${encodeURIComponent(evoInstancia)}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
