@@ -136,6 +136,7 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
   const [form, setForm] = useState<Organizacao>(emptyOrg);
   const [saving, setSaving] = useState(false);
   const [promptExpanded, setPromptExpanded] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
 
   useEffect(() => {
     setForm(organizacao ?? emptyOrg);
@@ -255,6 +256,26 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
             <div className="space-y-2">
               <Label>Instância EVO</Label>
               <Input value={form.evo_instancia} onChange={(e) => update('evo_instancia', e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>API Key da Instância</Label>
+              <div className="relative">
+                <Input
+                  type={showApiKey ? 'text' : 'password'}
+                  value={form.evo_apikey}
+                  onChange={(e) => update('evo_apikey', e.target.value)}
+                  placeholder="Cole a API Key da Evolution"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-10 w-10"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                >
+                  {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Link Cardápio</Label>
