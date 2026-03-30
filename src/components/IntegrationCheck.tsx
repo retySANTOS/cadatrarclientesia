@@ -31,16 +31,20 @@ export function IntegrationCheck({ webhookUrl, evoInstancia, evoApikey, supabase
     setDetail('');
 
     try {
-      // Step 1: Check n8n webhook
-      const webhookRes = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'health_check' }),
-      });
-
-      if (!webhookRes.ok) {
+      // Step 1: Check n8n webhook (any response = connected)
+      let n8nConnected = false;
+      try {
+        const webhookRes = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'health_check' }),
+          mode: 'no-cors',
+        });
+        // With no-cors, opaque response (status 0) or any status means server exists
+        n8nConnected = true;
+      } catch {
         setStatus('offline');
-        setDetail('Servidor n8n não respondeu (status ' + webhookRes.status + ')');
+        setDetail('Não foi possível conectar ao servidor n8n');
         return;
       }
 
