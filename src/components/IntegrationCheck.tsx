@@ -53,17 +53,24 @@ export function IntegrationCheck({ webhookUrl, evoInstancia, evoApikey, supabase
         ? evoInstancia.replace(/\/+$/, '')
         : `https://${evoInstancia}`;
 
-      const evoRes = await fetch(`${evoBaseUrl}/instance/fetchInstances`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: evoApikey,
-        },
-      });
+      let evoRes: Response;
+      try {
+        evoRes = await fetch(`${evoBaseUrl}/instance/fetchInstances`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: evoApikey,
+          },
+        });
+      } catch {
+        setStatus('config_error');
+        setDetail('n8n online ✔ — Não foi possível conectar à Evolution API. Verifique a URL da instância.');
+        return;
+      }
 
       if (!evoRes.ok) {
         setStatus('config_error');
-        setDetail('Conexão estabelecida. Verifique as configurações na Evolution API');
+        setDetail('n8n online ✔ — Conexão estabelecida. Verifique as configurações na Evolution API');
         return;
       }
 
@@ -79,19 +86,14 @@ export function IntegrationCheck({ webhookUrl, evoInstancia, evoApikey, supabase
 
       if (!found) {
         setStatus('config_error');
-        setDetail('URL configurada na Evolution difere da URL do webhook');
+        setDetail('n8n online ✔ — URL configurada na Evolution difere da URL do webhook');
       } else {
         setStatus('ok');
         setDetail('Webhook e Evolution API configurados corretamente');
       }
     } catch (err: any) {
-      if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')) {
-        setStatus('offline');
-        setDetail('Não foi possível conectar ao servidor');
-      } else {
-        setStatus('config_error');
-        setDetail(err.message || 'Erro desconhecido');
-      }
+      setStatus('config_error');
+      setDetail(err.message || 'Erro desconhecido');
     }
   };
 
