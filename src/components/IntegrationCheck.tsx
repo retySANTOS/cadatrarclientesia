@@ -75,11 +75,18 @@ export function IntegrationCheck({ webhookUrl, evoInstancia, evoApikey, evoBaseU
 
       const instances = await evoRes.json();
 
-      // Step 3: Compare webhook URLs
+      // Step 3: Compare webhook URLs (normalized)
+      const normalize = (url: string) => url.trim().toLowerCase().replace(/\/+$/, '');
+      const normalizedWebhook = normalize(webhookUrl);
+      const normalizedSupabase = normalize(supabaseUrl);
+
       const found = Array.isArray(instances)
         ? instances.some((inst: any) => {
-            const configuredUrl = inst?.instance?.webhookUrl || inst?.setting?.websocket?.url || '';
-            return configuredUrl.includes(supabaseUrl) || configuredUrl === webhookUrl;
+            const configuredUrl = normalize(inst?.instance?.webhookUrl || inst?.setting?.websocket?.url || '');
+            console.log('[IntegrationCheck] URL Evolution:', configuredUrl);
+            console.log('[IntegrationCheck] URL Webhook:', normalizedWebhook);
+            console.log('[IntegrationCheck] URL Supabase:', normalizedSupabase);
+            return configuredUrl.includes(normalizedSupabase) || configuredUrl === normalizedWebhook;
           })
         : false;
 
