@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Copy, Maximize2 } from 'lucide-react';
+import { Copy, Eye, EyeOff, Maximize2 } from 'lucide-react';
+import { IntegrationCheck } from '@/components/IntegrationCheck';
 import { PromptHistory } from '@/components/PromptHistory';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,6 +24,7 @@ export interface Organizacao {
   contato_financeiro: string;
   prompt: string;
   evo_instancia: string;
+  evo_apikey: string;
   link_cardapio: string;
   url_cardapio_jina: string;
   webhook_url: string;
@@ -117,7 +119,7 @@ Taxas de Entrega (Baseada na distância):
 
 const emptyOrg: Organizacao = {
   nome: '', cnpj: '', slug: '', email: '', telefone: '', contato_financeiro: '',
-  prompt: DEFAULT_PROMPT, evo_instancia: '', link_cardapio: '', url_cardapio_jina: '', webhook_url: '',
+  prompt: DEFAULT_PROMPT, evo_instancia: '', evo_apikey: '', link_cardapio: '', url_cardapio_jina: '', webhook_url: '',
   logo_url: '', cidade_estado: '', endereco_completo: '',
   ativado: true, ativo: true, mensagem_boas_vindas: '',
 };
@@ -134,6 +136,7 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
   const [form, setForm] = useState<Organizacao>(emptyOrg);
   const [saving, setSaving] = useState(false);
   const [promptExpanded, setPromptExpanded] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
 
   useEffect(() => {
     setForm(organizacao ?? emptyOrg);
@@ -255,6 +258,26 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
               <Input value={form.evo_instancia} onChange={(e) => update('evo_instancia', e.target.value)} />
             </div>
             <div className="space-y-2">
+              <Label>API Key da Instância</Label>
+              <div className="relative">
+                <Input
+                  type={showApiKey ? 'text' : 'password'}
+                  value={form.evo_apikey}
+                  onChange={(e) => update('evo_apikey', e.target.value)}
+                  placeholder="Cole a API Key da Evolution"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-10 w-10"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                >
+                  {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
               <Label>Link Cardápio</Label>
               <Input value={form.link_cardapio} onChange={(e) => update('link_cardapio', e.target.value)} />
             </div>
@@ -282,6 +305,14 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
               <p className="text-xs text-muted-foreground">
                 Copie e cole esse link no Evolution → Menu Events → URL e depois salve.
               </p>
+              <div className="pt-2">
+                <IntegrationCheck
+                  webhookUrl={form.webhook_url || ''}
+                  evoInstancia={form.evo_instancia}
+                  evoApikey={form.evo_apikey}
+                  supabaseUrl="https://supabase.projautomacao.com.br"
+                />
+              </div>
             </div>
           </TabsContent>
 
