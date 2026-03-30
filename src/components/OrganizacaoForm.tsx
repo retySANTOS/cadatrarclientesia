@@ -25,6 +25,7 @@ export interface Organizacao {
   prompt: string;
   evo_instancia: string;
   evo_apikey: string;
+  evo_base_url: string;
   link_cardapio: string;
   url_cardapio_jina: string;
   webhook_url: string;
@@ -119,7 +120,7 @@ Taxas de Entrega (Baseada na distância):
 
 const emptyOrg: Organizacao = {
   nome: '', cnpj: '', slug: '', email: '', telefone: '', contato_financeiro: '',
-  prompt: DEFAULT_PROMPT, evo_instancia: '', evo_apikey: '', link_cardapio: '', url_cardapio_jina: '', webhook_url: '',
+  prompt: DEFAULT_PROMPT, evo_instancia: '', evo_apikey: '', evo_base_url: '', link_cardapio: '', url_cardapio_jina: '', webhook_url: '',
   logo_url: '', cidade_estado: '', endereco_completo: '',
   ativado: true, ativo: true, mensagem_boas_vindas: '',
 };
@@ -306,10 +307,11 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
                 Copie e cole esse link no Evolution → Menu Events → URL e depois salve.
               </p>
               <div className="pt-2">
-                <IntegrationCheck
+              <IntegrationCheck
                   webhookUrl={form.webhook_url || ''}
                   evoInstancia={form.evo_instancia}
                   evoApikey={form.evo_apikey}
+                  evoBaseUrl={form.evo_base_url || ''}
                   supabaseUrl="https://supabase.projautomacao.com.br"
                 />
               </div>

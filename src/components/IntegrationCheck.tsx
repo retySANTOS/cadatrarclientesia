@@ -10,6 +10,7 @@ interface Props {
   webhookUrl: string;
   evoInstancia: string;
   evoApikey: string;
+  evoBaseUrl: string;
   supabaseUrl: string;
 }
 
