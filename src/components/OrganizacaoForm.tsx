@@ -233,6 +233,7 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
                 <div className="flex items-center gap-1">
                   <PromptHistory
                     organizacaoId={organizacao?.id}
+                    currentPrompt={form.prompt}
                     onRestore={(p) => update('prompt', p)}
                   />
                   <Button
