@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Copy, Maximize2 } from 'lucide-react';
+import { Copy, Eye, EyeOff, Maximize2 } from 'lucide-react';
+import { IntegrationCheck } from '@/components/IntegrationCheck';
 import { PromptHistory } from '@/components/PromptHistory';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,6 +24,7 @@ export interface Organizacao {
   contato_financeiro: string;
   prompt: string;
   evo_instancia: string;
+  evo_apikey: string;
   link_cardapio: string;
   url_cardapio_jina: string;
   webhook_url: string;
@@ -117,7 +119,7 @@ Taxas de Entrega (Baseada na distância):
 
 const emptyOrg: Organizacao = {
   nome: '', cnpj: '', slug: '', email: '', telefone: '', contato_financeiro: '',
-  prompt: DEFAULT_PROMPT, evo_instancia: '', link_cardapio: '', url_cardapio_jina: '', webhook_url: '',
+  prompt: DEFAULT_PROMPT, evo_instancia: '', evo_apikey: '', link_cardapio: '', url_cardapio_jina: '', webhook_url: '',
   logo_url: '', cidade_estado: '', endereco_completo: '',
   ativado: true, ativo: true, mensagem_boas_vindas: '',
 };
