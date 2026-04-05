@@ -247,6 +247,7 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
             <TabsTrigger value="geral" className="flex-1">Geral</TabsTrigger>
             <TabsTrigger value="ia" className="flex-1">Config. IA</TabsTrigger>
             <TabsTrigger value="endereco" className="flex-1">Endereço & Status</TabsTrigger>
+            <TabsTrigger value="modulos" className="flex-1">Módulos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="geral" className="space-y-4 pt-4">
