@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Copy, Eye, EyeOff, Maximize2 } from 'lucide-react';
+import { Copy, Eye, EyeOff, Maximize2, Crown, Rocket } from 'lucide-react';
 import { IntegrationCheck } from '@/components/IntegrationCheck';
 import { PromptHistory } from '@/components/PromptHistory';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -9,10 +9,33 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { generateSlug } from '@/lib/generateSlug';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+
+export interface ModulosConfig {
+  monitor_pedidos: boolean;
+  feedback_automatico: boolean;
+  resumo_diario: boolean;
+  dashboard_feedbacks: boolean;
+  integracao_ifood: boolean;
+  programa_fidelidade: boolean;
+  campanhas: boolean;
+  dashboard_pedidos: boolean;
+}
+
+const DEFAULT_MODULOS: ModulosConfig = {
+  monitor_pedidos: false,
+  feedback_automatico: false,
+  resumo_diario: false,
+  dashboard_feedbacks: false,
+  integracao_ifood: false,
+  programa_fidelidade: false,
+  campanhas: false,
+  dashboard_pedidos: false,
+};
 
 export interface Organizacao {
   id?: string;
@@ -35,6 +58,7 @@ export interface Organizacao {
   ativado: boolean;
   ativo: boolean;
   mensagem_boas_vindas: string;
+  modulos: ModulosConfig;
   created_by?: string;
 }
 
@@ -132,12 +156,14 @@ Regras especiais (exemplos):
 - ErroFormatoMensagem: Diga que não entende este tipo de mensagem.
 - ContextoImagem: Use para descrever fotos enviadas pelo cliente caso necessário.
 </Contexto_Tecnico>
+`;
 
 const emptyOrg: Organizacao = {
   nome: '', cnpj: '', slug: '', email: '', telefone: '', contato_financeiro: '',
   prompt: DEFAULT_PROMPT, evo_instancia: '', evo_apikey: '', evo_base_url: '', link_cardapio: '', url_cardapio_jina: '', webhook_url: '',
   logo_url: '', cidade_estado: '', endereco_completo: '',
   ativado: true, ativo: true, mensagem_boas_vindas: '',
+  modulos: { ...DEFAULT_MODULOS },
 };
 
 interface Props {
@@ -155,8 +181,19 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
   const [showApiKey, setShowApiKey] = useState(false);
 
   useEffect(() => {
-    setForm(organizacao ?? emptyOrg);
+    if (organizacao) {
+      setForm({ ...organizacao, modulos: { ...DEFAULT_MODULOS, ...organizacao.modulos } });
+    } else {
+      setForm(emptyOrg);
+    }
   }, [organizacao, open]);
+
+  const updateModulo = (key: keyof ModulosConfig, value: boolean) => {
+    setForm((prev) => ({
+      ...prev,
+      modulos: { ...DEFAULT_MODULOS, ...prev.modulos, [key]: value },
+    }));
+  };
 
   const update = (field: keyof Organizacao, value: string | boolean) => {
     setForm((prev) => {
@@ -214,6 +251,7 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
             <TabsTrigger value="geral" className="flex-1">Geral</TabsTrigger>
             <TabsTrigger value="ia" className="flex-1">Config. IA</TabsTrigger>
             <TabsTrigger value="endereco" className="flex-1">Endereço & Status</TabsTrigger>
+            <TabsTrigger value="modulos" className="flex-1">Módulos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="geral" className="space-y-4 pt-4">
@@ -353,6 +391,62 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
             <div className="space-y-2">
               <Label>Mensagem de Boas-vindas</Label>
               <Textarea value={form.mensagem_boas_vindas} onChange={(e) => update('mensagem_boas_vindas', e.target.value)} rows={3} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="modulos" className="space-y-6 pt-4">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Crown className="h-4 w-4 text-amber-500" />
+                <h3 className="font-semibold text-sm">Módulos Premium</h3>
+              </div>
+              <div className="space-y-2">
+                {([
+                  { key: 'monitor_pedidos' as const, label: 'Monitor de pedidos', desc: 'Notificação automática quando status do pedido muda' },
+                  { key: 'feedback_automatico' as const, label: 'Feedback automático', desc: 'Pede avaliação após entrega e trata reclamações com foto' },
+                  { key: 'resumo_diario' as const, label: 'Resumo diário', desc: 'Relatório diário via WhatsApp pro dono' },
+                  { key: 'dashboard_feedbacks' as const, label: 'Dashboard feedbacks', desc: 'Painel com notas, gráficos e filtros' },
+                ]).map((m) => (
+                  <div key={m.key} className="flex items-center justify-between rounded-lg border p-3">
+                    <div>
+                      <p className="font-medium text-sm">{m.label}</p>
+                      <p className="text-xs text-muted-foreground">{m.desc}</p>
+                    </div>
+                    <Switch
+                      checked={form.modulos?.[m.key] ?? false}
+                      onCheckedChange={(v) => updateModulo(m.key, v)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Rocket className="h-4 w-4 text-muted-foreground" />
+                <h3 className="font-semibold text-sm text-muted-foreground">Módulos Pro</h3>
+              </div>
+              <div className="space-y-2">
+                {([
+                  { key: 'integracao_ifood' as const, label: 'Integração iFood', desc: 'Recebe pedidos do iFood no mesmo sistema' },
+                  { key: 'programa_fidelidade' as const, label: 'Programa fidelidade', desc: 'Pontos por pedido e recompensas' },
+                  { key: 'campanhas' as const, label: 'Campanhas', desc: 'Disparo de promoções via WhatsApp' },
+                  { key: 'dashboard_pedidos' as const, label: 'Dashboard pedidos', desc: 'Analytics de vendas e ticket médio' },
+                ]).map((m) => (
+                  <div key={m.key} className="flex items-center justify-between rounded-lg border p-3 opacity-60">
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm">{m.label}</p>
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Em breve</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{m.desc}</p>
+                      </div>
+                    </div>
+                    <Switch disabled checked={false} />
+                  </div>
+                ))}
+              </div>
             </div>
           </TabsContent>
         </Tabs>
