@@ -15,6 +15,28 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
+export interface ModulosConfig {
+  monitor_pedidos: boolean;
+  feedback_automatico: boolean;
+  resumo_diario: boolean;
+  dashboard_feedbacks: boolean;
+  integracao_ifood: boolean;
+  programa_fidelidade: boolean;
+  campanhas: boolean;
+  dashboard_pedidos: boolean;
+}
+
+const DEFAULT_MODULOS: ModulosConfig = {
+  monitor_pedidos: false,
+  feedback_automatico: false,
+  resumo_diario: false,
+  dashboard_feedbacks: false,
+  integracao_ifood: false,
+  programa_fidelidade: false,
+  campanhas: false,
+  dashboard_pedidos: false,
+};
+
 export interface Organizacao {
   id?: string;
   nome: string;
@@ -36,6 +58,7 @@ export interface Organizacao {
   ativado: boolean;
   ativo: boolean;
   mensagem_boas_vindas: string;
+  modulos: ModulosConfig;
   created_by?: string;
 }
 
