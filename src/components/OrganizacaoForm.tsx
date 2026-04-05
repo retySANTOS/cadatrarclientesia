@@ -181,7 +181,11 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
   const [showApiKey, setShowApiKey] = useState(false);
 
   useEffect(() => {
-    setForm(organizacao ?? emptyOrg);
+    if (organizacao) {
+      setForm({ ...organizacao, modulos: { ...DEFAULT_MODULOS, ...organizacao.modulos } });
+    } else {
+      setForm(emptyOrg);
+    }
   }, [organizacao, open]);
 
   const updateModulo = (key: keyof ModulosConfig, value: boolean) => {
