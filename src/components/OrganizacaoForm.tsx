@@ -45,6 +45,7 @@ export interface Organizacao {
   email: string;
   telefone: string;
   contato_financeiro: string;
+  aviso_do_dia: string;
   prompt: string;
   evo_instancia: string;
   evo_apikey: string;
