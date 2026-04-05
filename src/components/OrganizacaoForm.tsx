@@ -45,6 +45,7 @@ export interface Organizacao {
   email: string;
   telefone: string;
   contato_financeiro: string;
+  aviso_do_dia: string;
   prompt: string;
   evo_instancia: string;
   evo_apikey: string;
@@ -159,7 +160,7 @@ Regras especiais (exemplos):
 `;
 
 const emptyOrg: Organizacao = {
-  nome: '', cnpj: '', slug: '', email: '', telefone: '', contato_financeiro: '',
+  nome: '', cnpj: '', slug: '', email: '', telefone: '', contato_financeiro: '', aviso_do_dia: '',
   prompt: DEFAULT_PROMPT, evo_instancia: '', evo_apikey: '', evo_base_url: '', link_cardapio: '', url_cardapio_jina: '', webhook_url: '',
   logo_url: '', cidade_estado: '', endereco_completo: '',
   ativado: true, ativo: true, mensagem_boas_vindas: '',
@@ -280,6 +281,11 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
             <div className="space-y-2">
               <Label>Contato Financeiro</Label>
               <Input value={form.contato_financeiro} onChange={(e) => update('contato_financeiro', e.target.value)} placeholder="Nome ou telefone do contato financeiro" />
+            </div>
+            <div className="space-y-2">
+              <Label>Aviso do dia</Label>
+              <Textarea rows={2} value={form.aviso_do_dia} onChange={(e) => update('aviso_do_dia', e.target.value)} placeholder="Ex: Hoje temos peixe especial de Sexta Santa! 🐟 (deixe vazio quando não tiver aviso)" />
+              <p className="text-xs text-muted-foreground">O agente menciona esse aviso naturalmente quando o cliente puxa conversa. Apague quando a promoção acabar.</p>
             </div>
           </TabsContent>
 
