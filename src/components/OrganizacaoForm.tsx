@@ -156,12 +156,14 @@ Regras especiais (exemplos):
 - ErroFormatoMensagem: Diga que não entende este tipo de mensagem.
 - ContextoImagem: Use para descrever fotos enviadas pelo cliente caso necessário.
 </Contexto_Tecnico>
+`;
 
 const emptyOrg: Organizacao = {
   nome: '', cnpj: '', slug: '', email: '', telefone: '', contato_financeiro: '',
   prompt: DEFAULT_PROMPT, evo_instancia: '', evo_apikey: '', evo_base_url: '', link_cardapio: '', url_cardapio_jina: '', webhook_url: '',
   logo_url: '', cidade_estado: '', endereco_completo: '',
   ativado: true, ativo: true, mensagem_boas_vindas: '',
+  modulos: { ...DEFAULT_MODULOS },
 };
 
 interface Props {
