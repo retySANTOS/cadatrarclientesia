@@ -389,6 +389,62 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
               <Textarea value={form.mensagem_boas_vindas} onChange={(e) => update('mensagem_boas_vindas', e.target.value)} rows={3} />
             </div>
           </TabsContent>
+
+          <TabsContent value="modulos" className="space-y-6 pt-4">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Crown className="h-4 w-4 text-amber-500" />
+                <h3 className="font-semibold text-sm">Módulos Premium</h3>
+              </div>
+              <div className="space-y-2">
+                {([
+                  { key: 'monitor_pedidos' as const, label: 'Monitor de pedidos', desc: 'Notificação automática quando status do pedido muda' },
+                  { key: 'feedback_automatico' as const, label: 'Feedback automático', desc: 'Pede avaliação após entrega e trata reclamações com foto' },
+                  { key: 'resumo_diario' as const, label: 'Resumo diário', desc: 'Relatório diário via WhatsApp pro dono' },
+                  { key: 'dashboard_feedbacks' as const, label: 'Dashboard feedbacks', desc: 'Painel com notas, gráficos e filtros' },
+                ]).map((m) => (
+                  <div key={m.key} className="flex items-center justify-between rounded-lg border p-3">
+                    <div>
+                      <p className="font-medium text-sm">{m.label}</p>
+                      <p className="text-xs text-muted-foreground">{m.desc}</p>
+                    </div>
+                    <Switch
+                      checked={form.modulos?.[m.key] ?? false}
+                      onCheckedChange={(v) => updateModulo(m.key, v)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Rocket className="h-4 w-4 text-muted-foreground" />
+                <h3 className="font-semibold text-sm text-muted-foreground">Módulos Pro</h3>
+              </div>
+              <div className="space-y-2">
+                {([
+                  { key: 'integracao_ifood' as const, label: 'Integração iFood', desc: 'Recebe pedidos do iFood no mesmo sistema' },
+                  { key: 'programa_fidelidade' as const, label: 'Programa fidelidade', desc: 'Pontos por pedido e recompensas' },
+                  { key: 'campanhas' as const, label: 'Campanhas', desc: 'Disparo de promoções via WhatsApp' },
+                  { key: 'dashboard_pedidos' as const, label: 'Dashboard pedidos', desc: 'Analytics de vendas e ticket médio' },
+                ]).map((m) => (
+                  <div key={m.key} className="flex items-center justify-between rounded-lg border p-3 opacity-60">
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm">{m.label}</p>
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Em breve</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{m.desc}</p>
+                      </div>
+                    </div>
+                    <Switch disabled checked={false} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
         </Tabs>
 
         <div className="flex justify-end gap-2 pt-4 border-t">
