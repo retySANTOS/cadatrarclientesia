@@ -282,6 +282,11 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
               <Label>Contato Financeiro</Label>
               <Input value={form.contato_financeiro} onChange={(e) => update('contato_financeiro', e.target.value)} placeholder="Nome ou telefone do contato financeiro" />
             </div>
+            <div className="space-y-2">
+              <Label>Aviso do dia</Label>
+              <Textarea rows={2} value={form.aviso_do_dia} onChange={(e) => update('aviso_do_dia', e.target.value)} placeholder="Ex: Hoje temos peixe especial de Sexta Santa! 🐟 (deixe vazio quando não tiver aviso)" />
+              <p className="text-xs text-muted-foreground">O agente menciona esse aviso naturalmente quando o cliente puxa conversa. Apague quando a promoção acabar.</p>
+            </div>
           </TabsContent>
 
           <TabsContent value="ia" className="space-y-4 pt-4">
