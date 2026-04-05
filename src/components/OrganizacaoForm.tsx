@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Copy, Eye, EyeOff, Maximize2 } from 'lucide-react';
+import { Copy, Eye, EyeOff, Maximize2, Crown, Rocket } from 'lucide-react';
 import { IntegrationCheck } from '@/components/IntegrationCheck';
 import { PromptHistory } from '@/components/PromptHistory';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
