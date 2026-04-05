@@ -184,6 +184,13 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
     setForm(organizacao ?? emptyOrg);
   }, [organizacao, open]);
 
+  const updateModulo = (key: keyof ModulosConfig, value: boolean) => {
+    setForm((prev) => ({
+      ...prev,
+      modulos: { ...DEFAULT_MODULOS, ...prev.modulos, [key]: value },
+    }));
+  };
+
   const update = (field: keyof Organizacao, value: string | boolean) => {
     setForm((prev) => {
       const next = { ...prev, [field]: value };
