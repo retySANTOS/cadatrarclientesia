@@ -412,6 +412,7 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
                   { key: 'feedback_automatico' as const, label: 'Feedback automático', desc: 'Pede avaliação após entrega e trata reclamações com foto' },
                   { key: 'resumo_diario' as const, label: 'Resumo diário', desc: 'Relatório diário via WhatsApp pro dono' },
                   { key: 'dashboard_feedbacks' as const, label: 'Dashboard feedbacks', desc: 'Painel com notas, gráficos e filtros' },
+                  { key: 'campanhas' as const, label: 'Campanhas', desc: 'Disparo de promoções via WhatsApp' },
                 ]).map((m) => (
                   <div key={m.key} className="flex items-center justify-between rounded-lg border p-3">
                     <div>
