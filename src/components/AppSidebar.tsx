@@ -22,6 +22,7 @@ const mainItems = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Organizações', url: '/organizacoes', icon: Building2 },
   { title: 'Equipe', url: '/equipe', icon: Users },
+  { title: 'Campanhas', url: '/campanhas', icon: Megaphone },
 ];
 
 const reportItems = [
