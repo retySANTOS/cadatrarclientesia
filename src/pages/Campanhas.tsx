@@ -44,7 +44,7 @@ interface Campanha {
   nome: string;
   status: string;
   mensagem: string;
-  filtro_publico: string;
+  filtro_clientes: string;
   data_disparo: string;
   total_enviados: number | null;
   total_responderam: number | null;
