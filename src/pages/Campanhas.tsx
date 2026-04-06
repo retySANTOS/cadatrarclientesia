@@ -1,14 +1,637 @@
+import { useState, useEffect, useMemo } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Megaphone, Users, TrendingUp, Clock, Search, Plus, Send, BarChart3,
+  AlertCircle, CalendarIcon,
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
-const Campanhas = () => {
+/* ── types ── */
+
+interface Organizacao {
+  id: string;
+  nome: string;
+  modulos: Record<string, boolean> | null;
+}
+
+interface Campanha {
+  id: string;
+  organizacao_id: string;
+  nome: string;
+  status: string;
+  mensagem: string;
+  filtro_publico: string;
+  data_disparo: string;
+  total_enviados: number | null;
+  total_responderam: number | null;
+  created_at: string;
+}
+
+interface ResumoCampanha {
+  id: string;
+  organizacao_id: string;
+  organizacao_nome: string;
+  nome: string;
+  status: string;
+  data_disparo: string;
+  total_enviados: number;
+  total_responderam: number;
+  taxa_resposta: number;
+}
+
+/* ── helpers ── */
+
+const STATUS_COLORS: Record<string, string> = {
+  agendada: 'bg-blue-100 text-blue-700 border-blue-200',
+  enviando: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  enviada: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  cancelada: 'bg-red-100 text-red-700 border-red-200',
+  rascunho: 'bg-slate-100 text-slate-600 border-slate-200',
+};
+
+const PUBLICO_LABELS: Record<string, { title: string; desc: string }> = {
+  ativos_30dias: { title: 'Ativos recentes', desc: 'Pedido nos últimos 30 dias' },
+  inativos_30a90: { title: 'Inativos (31–90 dias)', desc: 'Reativação de clientes' },
+  dormentes: { title: 'Dormentes (90+ dias)', desc: 'Sumiram há muito tempo' },
+  todos: { title: 'Todos os clientes', desc: 'Opt-out sempre respeitado' },
+};
+
+function taxa(enviados: number | null, responderam: number | null) {
+  if (!enviados || enviados === 0) return 0;
+  return Math.round(((responderam ?? 0) / enviados) * 100);
+}
+
+/* ── component ── */
+
+export default function Campanhas() {
+  const { user } = useAuth();
+
+  /* orgs */
+  const [orgs, setOrgs] = useState<Organizacao[]>([]);
+  const [selectedOrg, setSelectedOrg] = useState<Organizacao | null>(null);
+  const [orgSearch, setOrgSearch] = useState('');
+  const [orgOpen, setOrgOpen] = useState(false);
+  const [loadingOrgs, setLoadingOrgs] = useState(true);
+
+  /* campanhas */
+  const [campanhas, setCampanhas] = useState<Campanha[]>([]);
+  const [loadingCampanhas, setLoadingCampanhas] = useState(false);
+
+  /* resumo */
+  const [resumo, setResumo] = useState<ResumoCampanha[]>([]);
+  const [loadingResumo, setLoadingResumo] = useState(false);
+
+  /* ui */
+  const [activeTab, setActiveTab] = useState('campanhas');
+  const [statusFilter, setStatusFilter] = useState('todas');
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  /* new campaign form */
+  const [formOrgId, setFormOrgId] = useState('');
+  const [formNome, setFormNome] = useState('');
+  const [formData, setFormData] = useState<Date | undefined>();
+  const [formHora, setFormHora] = useState('18:00');
+  const [formPublico, setFormPublico] = useState('');
+  const [formMensagem, setFormMensagem] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const orgsComModulo = useMemo(() => orgs.filter(o => o.modulos?.campanhas === true), [orgs]);
+
+  /* ── data loading ── */
+
+  useEffect(() => {
+    supabase.from('organizacao').select('id, nome, modulos').order('nome').then(({ data }) => {
+      if (data) {
+        const mapped = data.map((d: any) => ({ ...d, modulos: d.modulos as Record<string, boolean> | null }));
+        setOrgs(mapped);
+        if (mapped.length === 1) {
+          setSelectedOrg(mapped[0]);
+          setOrgSearch(mapped[0].nome);
+        }
+      }
+      setLoadingOrgs(false);
+    });
+  }, []);
+
+  const loadCampanhas = () => {
+    setLoadingCampanhas(true);
+    let q = supabase.from('campanhas').select('*').order('created_at', { ascending: false });
+    if (selectedOrg) q = q.eq('organizacao_id', selectedOrg.id);
+    q.then(({ data }) => {
+      setCampanhas((data as Campanha[]) ?? []);
+      setLoadingCampanhas(false);
+    });
+  };
+
+  const loadResumo = () => {
+    setLoadingResumo(true);
+    let q = supabase.from('resumo_campanhas').select('*');
+    if (selectedOrg) q = q.eq('organizacao_id', selectedOrg.id);
+    q.then(({ data }) => {
+      setResumo((data as ResumoCampanha[]) ?? []);
+      setLoadingResumo(false);
+    });
+  };
+
+  useEffect(() => { loadCampanhas(); loadResumo(); }, [selectedOrg]);
+
+  /* ── derived ── */
+
+  const filteredOrgs = useMemo(
+    () => orgSearch.length > 0 ? orgs.filter(o => o.nome?.toLowerCase().includes(orgSearch.toLowerCase())) : orgs,
+    [orgSearch, orgs],
+  );
+
+  const filteredCampanhas = useMemo(() => {
+    if (statusFilter === 'todas') return campanhas;
+    return campanhas.filter(c => c.status === statusFilter);
+  }, [campanhas, statusFilter]);
+
+  const agendadas = filteredCampanhas.filter(c => c.status === 'agendada');
+  const rascunhos = filteredCampanhas.filter(c => c.status === 'rascunho');
+  const historico = filteredCampanhas.filter(c => !['agendada', 'rascunho'].includes(c.status));
+
+  const metrics = useMemo(() => {
+    const enviadas = campanhas.filter(c => c.status === 'enviada');
+    return {
+      totalEnviadas: enviadas.length,
+      alcancados: enviadas.reduce((s, c) => s + (c.total_enviados ?? 0), 0),
+      taxaMedia: enviadas.length > 0
+        ? Math.round(enviadas.reduce((s, c) => s + taxa(c.total_enviados, c.total_responderam), 0) / enviadas.length)
+        : 0,
+      agendadas: campanhas.filter(c => c.status === 'agendada').length,
+    };
+  }, [campanhas]);
+
+  const moduloAtivo = selectedOrg?.modulos?.campanhas === true;
+
+  /* ── save ── */
+
+  const resetForm = () => {
+    setFormOrgId(''); setFormNome(''); setFormData(undefined);
+    setFormHora('18:00'); setFormPublico(''); setFormMensagem('');
+  };
+
+  const handleSave = async (status: 'rascunho' | 'agendada') => {
+    if (status === 'agendada') {
+      if (!formOrgId || !formNome.trim() || !formMensagem.trim() || !formData) {
+        toast.error('Preencha todos os campos obrigatórios para agendar');
+        return;
+      }
+    }
+    if (!formOrgId) { toast.error('Selecione uma organização'); return; }
+
+    setSaving(true);
+    const dataDisparo = formData
+      ? `${format(formData, 'yyyy-MM-dd')}T${formHora}:00`
+      : null;
+
+    const { error } = await supabase.from('campanhas').insert({
+      organizacao_id: formOrgId,
+      nome: formNome || 'Sem nome',
+      status,
+      mensagem: formMensagem,
+      filtro_publico: formPublico || null,
+      data_disparo: dataDisparo,
+    });
+
+    setSaving(false);
+    if (error) {
+      toast.error('Erro ao salvar campanha');
+      console.error(error);
+      return;
+    }
+
+    toast.success(status === 'agendada' ? 'Campanha agendada com sucesso!' : 'Rascunho salvo!');
+    setDialogOpen(false);
+    resetForm();
+    loadCampanhas();
+    loadResumo();
+  };
+
+  /* ── org name helper ── */
+  const orgName = (orgId: string) => orgs.find(o => o.id === orgId)?.nome ?? '';
+
+  const previewMsg = formMensagem.replace(/\{nome\}/gi, 'João');
+
+  /* ── render ── */
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-foreground">Campanhas</h1>
-        <p className="text-muted-foreground">Em breve você poderá gerenciar suas campanhas aqui.</p>
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Campanhas</h1>
+            <p className="text-sm text-slate-500">Disparos automáticos via WhatsApp</p>
+          </div>
+          <Button className="gap-2" onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4" /> Nova campanha
+          </Button>
+        </div>
+
+        {/* Org selector */}
+        {orgs.length > 1 && (
+          <Popover open={orgOpen} onOpenChange={setOrgOpen}>
+            <PopoverTrigger asChild>
+              <div className="relative max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="Buscar organização..."
+                  value={orgSearch}
+                  onChange={e => { setOrgSearch(e.target.value); setSelectedOrg(null); setOrgOpen(true); }}
+                  onFocus={() => setOrgOpen(true)}
+                  className="pl-9"
+                />
+              </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start" onOpenAutoFocus={e => e.preventDefault()}>
+              <ul className="max-h-56 overflow-auto py-1">
+                {loadingOrgs && <li className="px-3 py-2 text-sm text-slate-400">Carregando...</li>}
+                {!loadingOrgs && filteredOrgs.length === 0 && <li className="px-3 py-2 text-sm text-slate-400">Nenhum resultado</li>}
+                {filteredOrgs.map(org => (
+                  <li
+                    key={org.id}
+                    className="flex items-center justify-between px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 hover:text-blue-700"
+                    onClick={() => { setSelectedOrg(org); setOrgSearch(org.nome); setOrgOpen(false); }}
+                  >
+                    <span>{org.nome}</span>
+                    <Badge variant="outline" className={cn('text-[10px] px-1.5 py-0', org.modulos?.campanhas ? 'border-emerald-300 text-emerald-600' : 'border-slate-200 text-slate-400')}>
+                      {org.modulos?.campanhas ? 'ativo' : 'inativo'}
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            </PopoverContent>
+          </Popover>
+        )}
+
+        {selectedOrg && orgs.length > 1 && (
+          <button className="text-xs text-blue-600 hover:underline" onClick={() => { setSelectedOrg(null); setOrgSearch(''); }}>
+            ← Limpar filtro
+          </button>
+        )}
+
+        {/* Banner módulo inativo */}
+        {selectedOrg && !moduloAtivo && (
+          <Card className="border-amber-300 bg-amber-50">
+            <CardContent className="p-4 flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
+              <p className="text-sm text-amber-800">
+                O módulo <strong>Campanhas</strong> não está ativado para <strong>{selectedOrg.nome}</strong>. Ative-o na aba Módulos da organização.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Metric cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="shadow-sm border-slate-100">
+            <CardContent className="p-5 flex items-center gap-4">
+              <div className="rounded-lg bg-blue-100 p-3"><Megaphone className="h-5 w-5 text-blue-600" /></div>
+              <div>
+                <p className="text-sm text-slate-500">Campanhas enviadas</p>
+                <p className="text-2xl font-bold text-slate-800">{metrics.totalEnviadas}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="shadow-sm border-slate-100">
+            <CardContent className="p-5 flex items-center gap-4">
+              <div className="rounded-lg bg-emerald-100 p-3"><Users className="h-5 w-5 text-emerald-600" /></div>
+              <div>
+                <p className="text-sm text-slate-500">Clientes alcançados</p>
+                <p className="text-2xl font-bold text-slate-800">{metrics.alcancados.toLocaleString('pt-BR')}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="shadow-sm border-slate-100">
+            <CardContent className="p-5 flex items-center gap-4">
+              <div className="rounded-lg bg-purple-100 p-3"><TrendingUp className="h-5 w-5 text-purple-600" /></div>
+              <div>
+                <p className="text-sm text-slate-500">Taxa de resposta</p>
+                <p className="text-2xl font-bold text-slate-800">{metrics.taxaMedia}%</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="shadow-sm border-slate-100">
+            <CardContent className="p-5 flex items-center gap-4">
+              <div className="rounded-lg bg-amber-100 p-3"><Clock className="h-5 w-5 text-amber-600" /></div>
+              <div>
+                <p className="text-sm text-slate-500">Agendadas</p>
+                <p className="text-2xl font-bold text-slate-800">{metrics.agendadas}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="campanhas" className="gap-1.5"><Send className="h-3.5 w-3.5" /> Campanhas</TabsTrigger>
+            <TabsTrigger value="relatorio" className="gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> Relatório</TabsTrigger>
+          </TabsList>
+
+          {/* ─── ABA CAMPANHAS ─── */}
+          <TabsContent value="campanhas">
+            {/* Status pills */}
+            <div className="flex flex-wrap gap-2 mb-4 mt-2">
+              {['todas', 'agendada', 'enviada', 'rascunho', 'cancelada'].map(s => (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
+                  className={cn(
+                    'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
+                    statusFilter === s
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50',
+                  )}
+                >
+                  {s === 'todas' ? 'Todas' : s.charAt(0).toUpperCase() + s.slice(1) + 's'}
+                </button>
+              ))}
+            </div>
+
+            {loadingCampanhas ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)}
+              </div>
+            ) : filteredCampanhas.length === 0 ? (
+              <div className="text-center text-slate-400 py-16">Nenhuma campanha encontrada</div>
+            ) : (
+              <div className="space-y-6">
+                {agendadas.length > 0 && (
+                  <CampanhaSection title="AGENDADAS" items={agendadas} orgName={orgName} />
+                )}
+                {rascunhos.length > 0 && (
+                  <CampanhaSection title="RASCUNHOS" items={rascunhos} orgName={orgName} />
+                )}
+                {historico.length > 0 && (
+                  <CampanhaSection title="HISTÓRICO" items={historico} orgName={orgName} />
+                )}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ─── ABA RELATÓRIO ─── */}
+          <TabsContent value="relatorio">
+            {loadingResumo ? (
+              <div className="space-y-3 mt-4">
+                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
+              </div>
+            ) : resumo.length === 0 ? (
+              <div className="text-center text-slate-400 py-16">Nenhum dado de campanha disponível</div>
+            ) : (
+              <div className="space-y-3 mt-4">
+                {resumo.map(r => {
+                  const t = taxa(r.total_enviados, r.total_responderam);
+                  return (
+                    <Card key={r.id} className="shadow-sm border-slate-100">
+                      <CardContent className="p-5">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <span className="font-semibold text-slate-800">{r.nome}</span>
+                              <Badge className={cn('text-xs border', STATUS_COLORS[r.status] ?? STATUS_COLORS.rascunho)}>
+                                {r.status}
+                              </Badge>
+                              {r.organizacao_nome && (
+                                <Badge variant="outline" className="text-xs border-purple-200 text-purple-600">{r.organizacao_nome}</Badge>
+                              )}
+                            </div>
+                            {r.data_disparo && (
+                              <p className="text-xs text-slate-400">
+                                {format(new Date(r.data_disparo), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-6 text-sm">
+                            <div className="text-center">
+                              <p className="text-slate-400 text-xs">Enviados</p>
+                              <p className="font-semibold text-slate-700">{(r.total_enviados ?? 0).toLocaleString('pt-BR')}</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-slate-400 text-xs">Responderam</p>
+                              <p className="font-semibold text-slate-700">{(r.total_responderam ?? 0).toLocaleString('pt-BR')}</p>
+                            </div>
+                            <div className="text-center min-w-[80px]">
+                              <p className="text-slate-400 text-xs">Taxa</p>
+                              <p className="font-semibold text-emerald-600">{t}%</p>
+                              <Progress value={t} className="h-1.5 mt-1 [&>div]:bg-emerald-500" />
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        {/* ─── DIALOG NOVA CAMPANHA ─── */}
+        <Dialog open={dialogOpen} onOpenChange={v => { if (!v) resetForm(); setDialogOpen(v); }}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Nova campanha</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-5 py-2">
+              {/* Org */}
+              <div className="space-y-2">
+                <Label>Organização</Label>
+                <Select value={formOrgId} onValueChange={setFormOrgId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a organização" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {orgsComModulo.map(o => (
+                      <SelectItem key={o.id} value={o.id}>{o.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-400">Apenas organizações com módulo Campanhas ativado aparecem aqui.</p>
+              </div>
+
+              {/* Nome */}
+              <div className="space-y-2">
+                <Label>Nome da campanha</Label>
+                <Input placeholder="Ex: Promoção de Sexta" value={formNome} onChange={e => setFormNome(e.target.value)} />
+              </div>
+
+              {/* Data + Hora */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Data do disparo</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !formData && 'text-muted-foreground')}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData ? format(formData, 'dd/MM/yyyy') : 'Selecione'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={formData}
+                        onSelect={setFormData}
+                        disabled={date => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-2">
+                  <Label>Hora</Label>
+                  <Input type="time" value={formHora} onChange={e => setFormHora(e.target.value)} />
+                </div>
+              </div>
+
+              {/* Público */}
+              <div className="space-y-2">
+                <Label>Público-alvo</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {Object.entries(PUBLICO_LABELS).map(([key, { title, desc }]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setFormPublico(key)}
+                      className={cn(
+                        'rounded-lg border-2 p-3 text-left transition-colors',
+                        formPublico === key
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-slate-200 hover:border-slate-300',
+                      )}
+                    >
+                      <p className="text-sm font-medium text-slate-700">{title}</p>
+                      <p className="text-xs text-slate-400">{desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Mensagem */}
+              <div className="space-y-2">
+                <Label>Mensagem</Label>
+                <Textarea
+                  rows={4}
+                  value={formMensagem}
+                  onChange={e => setFormMensagem(e.target.value)}
+                  placeholder="Olá {nome}, temos uma novidade pra você! 🎉"
+                />
+                <p className="text-xs text-slate-400">Use {'{nome}'} para personalizar com o nome do cliente</p>
+              </div>
+
+              {/* Preview */}
+              {formMensagem.trim() && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-slate-400">Pré-visualização</Label>
+                  <div className="flex justify-end">
+                    <div className="max-w-[75%] rounded-lg rounded-tr-sm bg-emerald-100 px-3 py-2 text-sm text-slate-800 shadow-sm whitespace-pre-wrap">
+                      {previewMsg}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="ghost" onClick={() => setDialogOpen(false)} disabled={saving}>Cancelar</Button>
+              <Button variant="outline" onClick={() => handleSave('rascunho')} disabled={saving}>
+                Salvar rascunho
+              </Button>
+              <Button onClick={() => handleSave('agendada')} disabled={saving}>
+                Agendar campanha
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
-};
+}
 
-export default Campanhas;
+/* ── sub-component ── */
+
+function CampanhaSection({ title, items, orgName }: { title: string; items: Campanha[]; orgName: (id: string) => string }) {
+  return (
+    <div>
+      <h3 className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase mb-2">{title}</h3>
+      <div className="space-y-2">
+        {items.map(c => {
+          const t = taxa(c.total_enviados, c.total_responderam);
+          return (
+            <Card key={c.id} className="shadow-sm border-slate-100">
+              <CardContent className="p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className="font-semibold text-slate-800">{c.nome}</span>
+                      <Badge className={cn('text-xs border', STATUS_COLORS[c.status] ?? STATUS_COLORS.rascunho)}>
+                        {c.status}
+                      </Badge>
+                      {orgName(c.organizacao_id) && (
+                        <Badge variant="outline" className="text-xs border-purple-200 text-purple-600">
+                          {orgName(c.organizacao_id)}
+                        </Badge>
+                      )}
+                      {c.filtro_publico && PUBLICO_LABELS[c.filtro_publico] && (
+                        <span className="text-xs text-slate-400">• {PUBLICO_LABELS[c.filtro_publico].title}</span>
+                      )}
+                    </div>
+                    {c.data_disparo && (
+                      <p className="text-xs text-slate-400">
+                        {format(new Date(c.data_disparo), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                      </p>
+                    )}
+                  </div>
+                  {c.status === 'enviada' && (
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="text-center">
+                        <p className="text-slate-400 text-xs">Enviados</p>
+                        <p className="font-semibold text-slate-700">{(c.total_enviados ?? 0).toLocaleString('pt-BR')}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-slate-400 text-xs">Responderam</p>
+                        <p className="font-semibold text-slate-700">{(c.total_responderam ?? 0).toLocaleString('pt-BR')}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-slate-400 text-xs">Taxa</p>
+                        <p className="font-semibold text-emerald-600">{t}%</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
