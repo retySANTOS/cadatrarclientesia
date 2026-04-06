@@ -12,6 +12,7 @@ import Equipe from "./pages/Equipe";
 import Relatorios from "./pages/Relatorios";
 import ConsumoDetalhado from "./pages/ConsumoDetalhado";
 import Feedbacks from "./pages/Feedbacks";
+import Campanhas from "./pages/Campanhas";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
