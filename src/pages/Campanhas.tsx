@@ -215,7 +215,7 @@ export default function Campanhas() {
       nome: formNome || 'Sem nome',
       status,
       mensagem: formMensagem,
-      filtro_publico: formPublico || null,
+      filtro_clientes: formPublico || null,
       data_disparo: dataDisparo,
     });
 
