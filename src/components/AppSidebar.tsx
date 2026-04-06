@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Users, BarChart3, LogOut, ChevronDown, FileText } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, BarChart3, LogOut, ChevronDown, FileText, Megaphone } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,6 +22,7 @@ const mainItems = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Organizações', url: '/organizacoes', icon: Building2 },
   { title: 'Equipe', url: '/equipe', icon: Users },
+  { title: 'Campanhas', url: '/campanhas', icon: Megaphone },
 ];
 
 const reportItems = [
