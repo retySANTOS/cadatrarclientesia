@@ -600,8 +600,8 @@ function CampanhaSection({ title, items, orgName }: { title: string; items: Camp
                           {orgName(c.organizacao_id)}
                         </Badge>
                       )}
-                      {c.filtro_publico && PUBLICO_LABELS[c.filtro_publico] && (
-                        <span className="text-xs text-slate-400">• {PUBLICO_LABELS[c.filtro_publico].title}</span>
+                      {c.filtro_clientes && PUBLICO_LABELS[c.filtro_clientes] && (
+                        <span className="text-xs text-slate-400">• {PUBLICO_LABELS[c.filtro_clientes].title}</span>
                       )}
                     </div>
                     {c.data_disparo && (
