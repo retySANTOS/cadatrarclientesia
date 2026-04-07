@@ -57,7 +57,6 @@ export interface Organizacao {
   cidade_estado: string;
   endereco_completo: string;
   ativado: boolean;
-  ativo: boolean;
   mensagem_boas_vindas: string;
   modulos: ModulosConfig;
   created_by?: string;
@@ -163,7 +162,7 @@ const emptyOrg: Organizacao = {
   nome: '', cnpj: '', slug: '', email: '', telefone: '', contato_financeiro: '', aviso_do_dia: '',
   prompt: DEFAULT_PROMPT, evo_instancia: '', evo_apikey: '', evo_base_url: '', link_cardapio: '', url_cardapio_jina: '', webhook_url: '',
   logo_url: '', cidade_estado: '', endereco_completo: '',
-  ativado: true, ativo: true, mensagem_boas_vindas: '',
+  ativado: true, mensagem_boas_vindas: '',
   modulos: { ...DEFAULT_MODULOS },
 };
 
