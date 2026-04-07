@@ -57,7 +57,6 @@ export interface Organizacao {
   cidade_estado: string;
   endereco_completo: string;
   ativado: boolean;
-  ativo: boolean;
   mensagem_boas_vindas: string;
   modulos: ModulosConfig;
   created_by?: string;
