@@ -29,6 +29,7 @@ const reportItems = [
   { title: 'Consumo IA', url: '/relatorios', icon: FileText },
   { title: 'Consumo Detalhado', url: '/consumo-detalhado', icon: FileText },
   { title: 'Feedbacks', url: '/feedbacks', icon: FileText },
+  { title: 'Grupos de produtos', url: '/grupos-produtos', icon: PackageSearch },
 ];
 
 export function AppSidebar() {
