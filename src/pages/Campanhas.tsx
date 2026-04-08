@@ -846,16 +846,16 @@ function CampanhaCard({ campanha: c, orgName, onView, onEdit, onCancel, onDelete
             {c.status === 'enviada' && (
               <div className="flex items-center gap-4 text-sm mr-2">
                 <div className="text-center">
-                  <p className="text-slate-400 text-xs">Enviados</p>
-                  <p className="font-semibold text-slate-700">{(c.total_enviados ?? 0).toLocaleString('pt-BR')}</p>
+                  <p className="font-bold text-slate-800">{(c.total_enviados ?? 0).toLocaleString('pt-BR')}</p>
+                  <p className="text-xs text-slate-400">Enviados</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-slate-400 text-xs">Responderam</p>
-                  <p className="font-semibold text-slate-700">{(c.total_responderam ?? 0).toLocaleString('pt-BR')}</p>
+                  <p className="font-bold text-emerald-600">{(c.total_responderam ?? 0).toLocaleString('pt-BR')}</p>
+                  <p className="text-xs text-slate-400">Responderam</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-slate-400 text-xs">Taxa</p>
-                  <p className="font-semibold text-emerald-600">{t}%</p>
+                  <p className="font-bold text-blue-600">{(c.total_enviados ?? 0) > 0 ? ((c.total_responderam ?? 0) / (c.total_enviados ?? 1) * 100).toFixed(1) + '%' : '—'}</p>
+                  <p className="text-xs text-slate-400">Taxa</p>
                 </div>
               </div>
             )}
