@@ -4,102 +4,78 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
-type Status = 'idle' | 'checking' | 'ok' | 'config_error' | 'offline';
+type Status = 'idle' | 'checking' | 'ok' | 'warn' | 'error';
+
+const DEFAULT_EVO_URL = 'https://evolution.projautomacao.com.br';
 
 interface Props {
-  webhookUrl: string;
   evoInstancia: string;
   evoApikey: string;
   evoBaseUrl: string;
-  supabaseUrl: string;
 }
 
-export function IntegrationCheck({ webhookUrl, evoInstancia, evoApikey, evoBaseUrl, supabaseUrl }: Props) {
+export function IntegrationCheck({ evoInstancia, evoApikey, evoBaseUrl }: Props) {
   const [status, setStatus] = useState<Status>('idle');
   const [detail, setDetail] = useState('');
 
   const check = async () => {
-    if (!webhookUrl) {
-      toast.error('Webhook URL não disponível');
-      return;
-    }
-    if (!evoInstancia || !evoApikey || !evoBaseUrl) {
-      toast.error('Preencha a Instância EVO, API Key e URL Base antes de verificar');
+    if (!evoInstancia.trim() || !evoApikey.trim()) {
+      toast.error('Preencha a Instância EVO e a API Key antes de verificar');
       return;
     }
 
     setStatus('checking');
     setDetail('');
 
+    const base = (evoBaseUrl.trim() || DEFAULT_EVO_URL).replace(/\/+$/, '');
+
     try {
-      // Step 1: Check n8n webhook (any response = connected)
-      let n8nConnected = false;
-      try {
-        const webhookRes = await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'health_check' }),
-          mode: 'no-cors',
-        });
-        // With no-cors, opaque response (status 0) or any status means server exists
-        n8nConnected = true;
-      } catch {
-        setStatus('offline');
-        setDetail('Não foi possível conectar ao servidor n8n');
+      const res = await fetch(`${base}/instance/fetchInstances`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: evoApikey.trim(),
+        },
+      });
+
+      if (!res.ok) {
+        setStatus('error');
+        setDetail('Verifique o nome da instância e a API Key.');
+        toast.error('❌ Instância não encontrada. Verifique o nome e a API Key.');
         return;
       }
 
-      // Step 2: Check Evolution API instance
-      const evoBase = evoBaseUrl.replace(/\/+$/, '');
-
-      let evoRes: Response;
-      try {
-        evoRes = await fetch(`${evoBase}/instance/fetchInstances?instanceName=${encodeURIComponent(evoInstancia)}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            apikey: evoApikey,
-          },
-        });
-      } catch {
-        setStatus('config_error');
-        setDetail('n8n online ✔ — Não foi possível conectar à Evolution API. Verifique a URL da instância.');
-        return;
-      }
-
-      if (!evoRes.ok) {
-        setStatus('config_error');
-        setDetail('n8n online ✔ — Conexão estabelecida. Verifique as configurações na Evolution API');
-        return;
-      }
-
-      const instances = await evoRes.json();
-
-      // Step 3: Compare webhook URLs (normalized)
-      const normalize = (url: string) => url.trim().toLowerCase().replace(/\/+$/, '');
-      const normalizedWebhook = normalize(webhookUrl);
-      const normalizedSupabase = normalize(supabaseUrl);
-
-      const found = Array.isArray(instances)
-        ? instances.some((inst: any) => {
-            const configuredUrl = normalize(inst?.instance?.webhookUrl || inst?.setting?.websocket?.url || '');
-            console.log('[IntegrationCheck] URL Evolution:', configuredUrl);
-            console.log('[IntegrationCheck] URL Webhook:', normalizedWebhook);
-            console.log('[IntegrationCheck] URL Supabase:', normalizedSupabase);
-            return configuredUrl.includes(normalizedSupabase) || configuredUrl === normalizedWebhook;
-          })
-        : false;
+      const instances: any[] = await res.json();
+      const found = instances.find(
+        (inst: any) =>
+          (inst?.instance?.instanceName || inst?.instanceName || '')
+            .toLowerCase() === evoInstancia.trim().toLowerCase()
+      );
 
       if (!found) {
-        setStatus('config_error');
-        setDetail('n8n online ✔ — URL configurada na Evolution difere da URL do webhook');
-      } else {
-        setStatus('ok');
-        setDetail('Webhook e Evolution API configurados corretamente');
+        setStatus('error');
+        setDetail('Instância não encontrada na Evolution.');
+        toast.error('❌ Instância não encontrada. Verifique o nome e a API Key.');
+        return;
       }
-    } catch (err: any) {
-      setStatus('config_error');
-      setDetail(err.message || 'Erro desconhecido');
+
+      const instanceStatus = (
+        found?.instance?.status || found?.status || ''
+      ).toLowerCase();
+
+      if (instanceStatus === 'open') {
+        setStatus('ok');
+        setDetail(`Instância ${evoInstancia} conectada!`);
+        toast.success(`✅ Instância ${evoInstancia} conectada e funcionando!`);
+      } else {
+        setStatus('warn');
+        setDetail('WhatsApp não conectado. Escaneie o QR Code.');
+        toast.warning('⚠️ Instância encontrada mas WhatsApp não está conectado. Escaneie o QR Code no Evolution.');
+      }
+    } catch {
+      setStatus('error');
+      setDetail('Não foi possível conectar à Evolution API.');
+      toast.error('❌ Instância não encontrada. Verifique o nome e a API Key.');
     }
   };
 
@@ -107,8 +83,8 @@ export function IntegrationCheck({ webhookUrl, evoInstancia, evoApikey, evoBaseU
     idle: null,
     checking: null,
     ok: { label: '🟢 Operacional', className: 'bg-green-100 text-green-800 border-green-200' },
-    config_error: { label: '🟡 Erro de Configuração', className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-    offline: { label: '🔴 Servidor Offline', className: 'bg-red-100 text-red-800 border-red-200' },
+    warn: { label: '🟡 WhatsApp desconectado', className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+    error: { label: '🔴 Erro', className: 'bg-red-100 text-red-800 border-red-200' },
   };
 
   const badge = badgeMap[status];
