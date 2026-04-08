@@ -13,6 +13,7 @@ import Relatorios from "./pages/Relatorios";
 import ConsumoDetalhado from "./pages/ConsumoDetalhado";
 import Feedbacks from "./pages/Feedbacks";
 import Campanhas from "./pages/Campanhas";
+import GruposProdutos from "./pages/GruposProdutos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
