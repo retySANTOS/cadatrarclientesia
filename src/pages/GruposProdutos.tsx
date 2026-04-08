@@ -141,7 +141,7 @@ export default function GruposProdutos() {
     setAddProdutoGrupo(grupo);
     setProdutoSearch('');
     setLoadingProdutos(true);
-    const { data, error } = await supabase.rpc('get_produtos_distintos', { org_id: grupo.organizacao_id }).catch(() => ({ data: null, error: null }));
+    let nomes: string[] = [];
 
     // Fallback: query direta
     let nomes: string[] = [];
