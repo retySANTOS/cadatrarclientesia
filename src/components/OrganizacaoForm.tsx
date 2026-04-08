@@ -337,6 +337,14 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
               </div>
             </div>
             <div className="space-y-2">
+              <Label>URL Base EVO</Label>
+              <Input
+                value={form.evo_base_url}
+                onChange={(e) => update('evo_base_url', e.target.value)}
+                placeholder="https://evolution.projautomacao.com.br"
+              />
+            </div>
+            <div className="space-y-2">
               <Label>Link Cardápio</Label>
               <Input value={form.link_cardapio} onChange={(e) => update('link_cardapio', e.target.value)} />
             </div>
@@ -365,12 +373,10 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
                 Copie e cole esse link no Evolution → Menu Events → URL e depois salve.
               </p>
               <div className="pt-2">
-              <IntegrationCheck
-                  webhookUrl={form.webhook_url || ''}
+                <IntegrationCheck
                   evoInstancia={form.evo_instancia}
                   evoApikey={form.evo_apikey}
                   evoBaseUrl={form.evo_base_url || ''}
-                  supabaseUrl="https://supabase.projautomacao.com.br"
                 />
               </div>
             </div>
