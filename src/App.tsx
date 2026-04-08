@@ -13,6 +13,7 @@ import Relatorios from "./pages/Relatorios";
 import ConsumoDetalhado from "./pages/ConsumoDetalhado";
 import Feedbacks from "./pages/Feedbacks";
 import Campanhas from "./pages/Campanhas";
+import GruposProdutos from "./pages/GruposProdutos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/consumo-detalhado" element={<ProtectedRoute><ConsumoDetalhado /></ProtectedRoute>} />
             <Route path="/feedbacks" element={<ProtectedRoute><Feedbacks /></ProtectedRoute>} />
             <Route path="/campanhas" element={<ProtectedRoute><Campanhas /></ProtectedRoute>} />
+            <Route path="/grupos-produtos" element={<ProtectedRoute><GruposProdutos /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
