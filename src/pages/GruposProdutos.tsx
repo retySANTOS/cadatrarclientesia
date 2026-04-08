@@ -143,28 +143,22 @@ export default function GruposProdutos() {
     setLoadingProdutos(true);
     let nomes: string[] = [];
 
-    // Fallback: query direta
-    let nomes: string[] = [];
-    if (data && Array.isArray(data)) {
-      nomes = data.map((d: any) => d.nome_produto).filter(Boolean);
-    } else {
-      // Direct query approach
-      const { data: pedidos } = await supabase
-        .from('pedidos')
-        .select('itens')
-        .eq('organizacao_id', grupo.organizacao_id)
-        .not('itens', 'is', null);
-      if (pedidos) {
-        const set = new Set<string>();
-        pedidos.forEach((p: any) => {
-          if (Array.isArray(p.itens)) {
-            p.itens.forEach((item: any) => {
-              if (item?.nome) set.add(item.nome);
-            });
-          }
-        });
-        nomes = Array.from(set).sort();
-      }
+    // Query produtos from pedidos
+    const { data: pedidos } = await supabase
+      .from('pedidos')
+      .select('itens')
+      .eq('organizacao_id', grupo.organizacao_id)
+      .not('itens', 'is', null);
+    if (pedidos) {
+      const set = new Set<string>();
+      pedidos.forEach((p: any) => {
+        if (Array.isArray(p.itens)) {
+          p.itens.forEach((item: any) => {
+            if (item?.nome) set.add(item.nome);
+          });
+        }
+      });
+      nomes = Array.from(set).sort();
     }
 
     // Filter out already in group
