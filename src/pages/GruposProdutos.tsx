@@ -141,30 +141,20 @@ export default function GruposProdutos() {
     setAddProdutoGrupo(grupo);
     setProdutoSearch('');
     setLoadingProdutos(true);
-    let nomes: string[] = [];
 
-    // Query produtos from pedidos
-    const { data: pedidos } = await supabase
-      .from('pedidos')
-      .select('itens')
-      .eq('organizacao_id', grupo.organizacao_id)
-      .not('itens', 'is', null);
-    if (pedidos) {
-      const set = new Set<string>();
-      pedidos.forEach((p: any) => {
-        if (Array.isArray(p.itens)) {
-          p.itens.forEach((item: any) => {
-            if (item?.nome) set.add(item.nome);
-          });
-        }
-      });
-      nomes = Array.from(set).sort();
+    const orgId = selectedOrg || grupo.organizacao_id;
+    const { data, error } = await supabase.rpc('buscar_produtos_disponiveis', {
+      p_org_id: orgId,
+      p_grupo_id: grupo.id,
+    });
+
+    if (error) {
+      console.error('Erro ao buscar produtos disponíveis:', error);
+      setProdutosDisponiveis([]);
+    } else {
+      const nomes = (data || []).map((r: any) => r.nome_produto as string).sort();
+      setProdutosDisponiveis(nomes);
     }
-
-    // Filter out already in group
-    const jaNoGrupo = new Set(grupo.produtos_grupos.map(pg => pg.nome_produto));
-    nomes = nomes.filter(n => !jaNoGrupo.has(n));
-    setProdutosDisponiveis(nomes);
     setLoadingProdutos(false);
   };
 
