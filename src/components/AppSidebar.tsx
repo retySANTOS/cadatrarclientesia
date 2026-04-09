@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Users, BarChart3, LogOut, ChevronDown, FileText, Megaphone, PackageSearch, Package } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, BarChart3, LogOut, ChevronDown, FileText, Megaphone, PackageSearch, Package, ShoppingBag } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,6 +32,7 @@ const reportItems = [
 
 const productItems = [
   { title: 'Grupos de produtos', url: '/grupos-produtos', icon: PackageSearch },
+  { title: 'Produtos vendidos', url: '/relatorio-produtos', icon: ShoppingBag },
 ];
 
 export function AppSidebar() {
