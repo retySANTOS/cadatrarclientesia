@@ -32,6 +32,7 @@ const reportItems = [
 
 const productItems = [
   { title: 'Grupos de produtos', url: '/grupos-produtos', icon: PackageSearch },
+  { title: 'Produtos vendidos', url: '/relatorio-produtos', icon: ShoppingBag },
 ];
 
 export function AppSidebar() {
