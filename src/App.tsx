@@ -14,6 +14,7 @@ import ConsumoDetalhado from "./pages/ConsumoDetalhado";
 import Feedbacks from "./pages/Feedbacks";
 import Campanhas from "./pages/Campanhas";
 import GruposProdutos from "./pages/GruposProdutos";
+import RelatorioProdutos from "./pages/RelatorioProdutos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
