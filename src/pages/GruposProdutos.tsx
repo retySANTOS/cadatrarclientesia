@@ -142,7 +142,7 @@ export default function GruposProdutos() {
     setProdutoSearch('');
     setLoadingProdutos(true);
 
-    const orgId = selectedOrg || grupo.organizacao_id;
+    const orgId = selectedOrg?.id || grupo.organizacao_id;
     const { data, error } = await supabase.rpc('buscar_produtos_disponiveis', {
       p_org_id: orgId,
       p_grupo_id: grupo.id,
