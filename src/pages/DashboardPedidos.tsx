@@ -56,11 +56,13 @@ function getDateRange(periodo: string) {
   };
 }
 
+const STATUS_ENTREGUE = 'Seu pedido já foi entregue';
+
 function statusBadge(status: string) {
-  const s = (status || '').toLowerCase();
-  if (s.includes('entreg')) return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-  if (s.includes('saiu')) return 'bg-amber-100 text-amber-700 border-amber-200';
-  if (s.includes('preparo')) return 'bg-blue-100 text-blue-700 border-blue-200';
+  if (status === 'Seu pedido já foi entregue') return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+  if (status === 'Seu pedido saiu para entrega') return 'bg-amber-100 text-amber-700 border-amber-200';
+  if (status === 'Seu pedido está sendo preparado') return 'bg-blue-100 text-blue-700 border-blue-200';
+  if (status === 'Pedido aguardando confirmação') return 'bg-slate-100 text-slate-600 border-slate-200';
   return 'bg-slate-100 text-slate-600 border-slate-200';
 }
 
@@ -120,40 +122,50 @@ export default function DashboardPedidos() {
       .eq('organizacao_id', selectedOrg.id)
       .gte('data_pedido', startDate)
       .lte('data_pedido', endDate)
-      .order('total_quantidade', { ascending: false })
-      .limit(5);
+      .order('total_quantidade', { ascending: false });
 
     Promise.all([fetchPedidos, fetchTop]).then(([resPedidos, resTop]) => {
       setPedidos((resPedidos.data as Pedido[]) ?? []);
-      setTopProdutos((resTop.data as TopProduto[]) ?? []);
+      const rawTop = (resTop.data as TopProduto[]) ?? [];
+      const agrupado = rawTop.reduce<TopProduto[]>((acc, item) => {
+        const existing = acc.find(i => i.nome_produto === item.nome_produto);
+        if (existing) {
+          existing.total_quantidade += item.total_quantidade;
+          existing.total_receita += item.total_receita;
+        } else {
+          acc.push({ ...item });
+        }
+        return acc;
+      }, []).sort((a, b) => b.total_quantidade - a.total_quantidade).slice(0, 5);
+      setTopProdutos(agrupado);
       setLoading(false);
     });
   }, [selectedOrg, periodo]);
 
-  // Metrics
+  // Metrics — only delivered orders count for revenue
+  const pedidosEntregues = pedidos.filter(p => p.status === STATUS_ENTREGUE);
   const totalPedidos = pedidos.length;
-  const faturamento = pedidos.reduce((s, p) => s + Number(p.valor_total ?? 0), 0);
-  const ticketMedio = totalPedidos > 0 ? faturamento / totalPedidos : 0;
-  const entregues = pedidos.filter(p => (p.status || '').toLowerCase().includes('entreg')).length;
-  const taxaEntrega = totalPedidos > 0 ? (entregues / totalPedidos) * 100 : 0;
+  const faturamento = pedidosEntregues.reduce((s, p) => s + Number(p.valor_total ?? 0), 0);
+  const ticketMedio = pedidosEntregues.length > 0 ? faturamento / pedidosEntregues.length : 0;
+  const taxaEntrega = totalPedidos > 0 ? (pedidosEntregues.length / totalPedidos) * 100 : 0;
 
   // Chart: faturamento por dia
   const faturamentoPorDia = useMemo(() => {
     const map = new Map<string, number>();
-    for (const p of pedidos) {
+    for (const p of pedidosEntregues) {
       const day = format(new Date(p.created_at), 'dd/MM');
       map.set(day, (map.get(day) ?? 0) + Number(p.valor_total ?? 0));
     }
     return Array.from(map.entries())
       .map(([dia, valor]) => ({ dia, valor }))
       .reverse();
-  }, [pedidos]);
+  }, [pedidosEntregues]);
 
   // Chart: pedidos por hora
   const pedidosPorHora = useMemo(() => {
     const counts = new Map<number, number>();
     for (let h = 11; h <= 23; h++) counts.set(h, 0);
-    for (const p of pedidos) {
+    for (const p of pedidosEntregues) {
       const h = new Date(p.created_at).getHours();
       if (h >= 11 && h <= 23) counts.set(h, (counts.get(h) ?? 0) + 1);
     }
@@ -164,7 +176,7 @@ export default function DashboardPedidos() {
     }));
     const maxQtd = Math.max(...arr.map(a => a.qtd), 0);
     return arr.map(a => ({ ...a, isPeak: a.qtd === maxQtd && maxQtd > 0 }));
-  }, [pedidos]);
+  }, [pedidosEntregues]);
 
   // Last 10 pedidos
   const ultimos10 = pedidos.slice(0, 10);
@@ -412,8 +424,8 @@ export default function DashboardPedidos() {
                           </TableCell>
                           <TableCell>
                             <Badge className={cn('text-xs border', statusBadge(p.status))}>
-                              {p.status || 'Aguardando'}
-                            </Badge>
+                             {p.status}
+                           </Badge>
                           </TableCell>
                           <TableCell className="text-sm text-slate-500">
                             {format(new Date(p.created_at), "dd/MM HH:mm", { locale: ptBR })}
