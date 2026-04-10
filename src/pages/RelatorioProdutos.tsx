@@ -99,20 +99,14 @@ export default function RelatorioProdutos() {
     if (!start || !end) { toast.error('Informe o período'); return; }
 
     setLoading(true);
-    let query = supabase
-      .from('relatorio_produtos')
-      .select('*')
-      .eq('organizacao_id', selectedOrg.id)
-      .gte('data_pedido', start)
-      .lte('data_pedido', end)
-      .gte('hora_pedido', horaInicio)
-      .lte('hora_pedido', horaFim);
-
-    if (grupoFiltro !== 'todos') {
-      query = query.eq('grupo', grupoFiltro);
-    }
-
-    const { data, error } = await query;
+    const { data, error } = await supabase.rpc('buscar_relatorio_produtos', {
+      p_org_id: selectedOrg.id,
+      p_data_inicio: start,
+      p_data_fim: end,
+      p_hora_inicio: horaInicio,
+      p_hora_fim: horaFim,
+      p_grupo: grupoFiltro === 'todos' ? null : grupoFiltro,
+    });
     if (error) { toast.error('Erro ao buscar dados: ' + error.message); setLoading(false); return; }
     setRawData(data ?? []);
     setLoading(false);
