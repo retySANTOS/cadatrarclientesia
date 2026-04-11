@@ -271,7 +271,7 @@ export default function Campanhas() {
       mensagem: formMensagem,
       filtro_clientes: formPublico || null,
       data_disparo: dataDisparo,
-      grupo_produto: formGrupo || null,
+      grupo_produto: formGrupo && formGrupo !== 'todos' ? formGrupo : null,
       janela_conversao: formJanela,
     };
 
@@ -641,9 +641,9 @@ export default function Campanhas() {
                       <SelectValue placeholder="Todos os produtos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos os produtos</SelectItem>
+                      <SelectItem value="todos">Todos os produtos</SelectItem>
                       {gruposProdutos.map(g => (
-                        <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
+                        <SelectItem key={g.id} value={g.nome}>{g.nome}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
