@@ -665,6 +665,7 @@ export default function Campanhas() {
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-slate-400">Período após envio para contabilizar conversões.</p>
+                </div>
 
                 {/* Mensagem */}
                 <div className="space-y-2">
@@ -687,6 +688,11 @@ export default function Campanhas() {
                         {previewMsg}
                       </div>
                     </div>
+                    {formGrupo && (
+                      <p className="text-xs text-slate-400 mt-2">
+                        📎 Filtro: clientes que compraram {gruposProdutos.find(g => g.id === formGrupo)?.nome ?? formGrupo}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
