@@ -918,7 +918,7 @@ function CampanhaCard({ campanha: c, orgName, onView, onEdit, onCancel, onDelete
                 </div>
                 <div className="text-center">
                   <p className="font-bold text-blue-600">{(c.total_enviados ?? 0) > 0 ? ((c.total_responderam ?? 0) / (c.total_enviados ?? 1) * 100).toFixed(1) + '%' : '—'}</p>
-                  <p className="text-xs text-slate-400">Taxa</p>
+                  <p className="text-xs text-slate-400">Conversões</p>
                 </div>
               </div>
             )}
