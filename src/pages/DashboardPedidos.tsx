@@ -13,7 +13,7 @@ import {
   ChartContainer, ChartTooltip, ChartTooltipContent,
 } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from 'recharts';
-import { Search, ShoppingCart, DollarSign, TrendingUp, Truck } from 'lucide-react';
+import { Search, ShoppingCart, DollarSign, TrendingUp, Truck, Banknote } from 'lucide-react';
 import { format, subDays, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -28,6 +28,7 @@ interface Pedido {
   valor_total: number;
   status: string;
   created_at: string;
+  taxa_entrega: number;
 }
 
 interface TopProduto {
@@ -146,8 +147,8 @@ export default function DashboardPedidos() {
   const pedidosEntregues = pedidos.filter(p => p.status === STATUS_ENTREGUE);
   const totalPedidos = pedidos.length;
   const faturamento = pedidosEntregues.reduce((s, p) => s + Number(p.valor_total ?? 0), 0);
-  const ticketMedio = pedidosEntregues.length > 0 ? faturamento / pedidosEntregues.length : 0;
-  const taxaEntrega = totalPedidos > 0 ? (pedidosEntregues.length / totalPedidos) * 100 : 0;
+  const ticketMedio = pedidosEntregues.length > 0 ? Math.round((faturamento / pedidosEntregues.length) * 100) / 100 : 0;
+  const totalTaxas = pedidosEntregues.reduce((s, p) => s + Number(p.taxa_entrega ?? 0), 0);
 
   // Chart: faturamento por dia
   const faturamentoPorDia = useMemo(() => {
@@ -264,7 +265,7 @@ export default function DashboardPedidos() {
             </div>
 
             {/* Metric cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <Card className="shadow-sm border-slate-100">
                 <CardContent className="p-5 flex items-center gap-4">
                   <div className="rounded-lg bg-blue-100 p-3"><ShoppingCart className="h-5 w-5 text-blue-600" /></div>
@@ -296,8 +297,17 @@ export default function DashboardPedidos() {
                 <CardContent className="p-5 flex items-center gap-4">
                   <div className="rounded-lg bg-purple-100 p-3"><Truck className="h-5 w-5 text-purple-600" /></div>
                   <div>
-                    <p className="text-sm text-slate-500">Taxa de entrega</p>
-                    <p className="text-2xl font-bold text-purple-600">{taxaEntrega.toFixed(1)}%</p>
+                    <p className="text-sm text-slate-500">Pedidos entregues</p>
+                    <p className="text-2xl font-bold text-purple-600">{pedidosEntregues.length} de {totalPedidos}</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="shadow-sm border-slate-100">
+                <CardContent className="p-5 flex items-center gap-4">
+                  <div className="rounded-lg bg-rose-100 p-3"><Banknote className="h-5 w-5 text-rose-600" /></div>
+                  <div>
+                    <p className="text-sm text-slate-500">Taxas de entrega</p>
+                    <p className="text-2xl font-bold text-rose-600">R$ {totalTaxas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                   </div>
                 </CardContent>
               </Card>

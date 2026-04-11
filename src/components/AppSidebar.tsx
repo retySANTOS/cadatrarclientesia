@@ -31,9 +31,9 @@ const reportItems = [
 ];
 
 const productItems = [
-  { title: 'Grupos de produtos', url: '/grupos-produtos', icon: PackageSearch },
-  { title: 'Produtos vendidos', url: '/relatorio-produtos', icon: ShoppingBag },
-  { title: 'Dashboard pedidos', url: '/dashboard-pedidos', icon: LayoutDashboard },
+  { title: 'Grupos de produtos', url: '/produtos/grupos-produtos', icon: PackageSearch },
+  { title: 'Produtos vendidos', url: '/produtos/relatorio-produtos', icon: ShoppingBag },
+  { title: 'Dashboard pedidos', url: '/produtos/dashboard-pedidos', icon: LayoutDashboard },
 ];
 
 export function AppSidebar() {

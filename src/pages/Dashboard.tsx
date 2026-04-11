@@ -30,7 +30,6 @@ export default function Dashboard() {
       icon: Building2,
       iconBg: 'bg-blue-100',
       iconColor: 'text-blue-600',
-      trend: '↑ 2% vs ontem',
     },
     {
       label: 'Organizações Ativas',
@@ -38,7 +37,6 @@ export default function Dashboard() {
       icon: CheckCircle,
       iconBg: 'bg-orange-100',
       iconColor: 'text-orange-600',
-      trend: '↑ 1% vs ontem',
     },
     {
       label: 'Membros da Equipe',
@@ -46,7 +44,6 @@ export default function Dashboard() {
       icon: Users,
       iconBg: 'bg-emerald-100',
       iconColor: 'text-emerald-600',
-      trend: '— estável',
     },
   ];
 
@@ -65,7 +62,6 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold tabular-nums text-slate-800">{c.value}</p>
-                <p className="text-xs text-emerald-600 mt-1">{c.trend}</p>
               </CardContent>
             </Card>
           ))}
