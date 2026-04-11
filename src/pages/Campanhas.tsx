@@ -183,6 +183,15 @@ export default function Campanhas() {
 
   useEffect(() => { loadCampanhas(); loadResumo(); }, [selectedOrg]);
 
+  /* load grupos_produtos for form */
+  useEffect(() => {
+    const orgId = formOrgId || selectedOrg?.id;
+    if (!orgId) { setGruposProdutos([]); return; }
+    supabase.from('grupos_produtos').select('id, nome')
+      .eq('organizacao_id', orgId).order('nome')
+      .then(({ data }) => setGruposProdutos((data as GrupoProduto[]) ?? []));
+  }, [formOrgId, selectedOrg]);
+
   /* ── derived ── */
 
   const filteredOrgs = useMemo(
@@ -623,6 +632,39 @@ export default function Campanhas() {
                     ))}
                   </div>
                 </div>
+
+                {/* Filtrar por produto */}
+                <div className="space-y-2">
+                  <Label>Filtrar por produto</Label>
+                  <Select value={formGrupo} onValueChange={setFormGrupo}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todos os produtos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Todos os produtos</SelectItem>
+                      {gruposProdutos.map(g => (
+                        <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-400">Opcional. Filtra clientes que já compraram itens deste grupo.</p>
+                </div>
+
+                {/* Janela de conversão */}
+                <div className="space-y-2">
+                  <Label>Janela de conversão</Label>
+                  <Select value={String(formJanela)} onValueChange={v => setFormJanela(Number(v))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3">3 dias</SelectItem>
+                      <SelectItem value="5">5 dias</SelectItem>
+                      <SelectItem value="7">7 dias (recomendado)</SelectItem>
+                      <SelectItem value="14">14 dias</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-400">Período após envio para contabilizar conversões.</p>
 
                 {/* Mensagem */}
                 <div className="space-y-2">
