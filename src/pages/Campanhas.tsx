@@ -50,6 +50,13 @@ interface Campanha {
   total_enviados: number | null;
   total_responderam: number | null;
   created_at: string;
+  grupo_produto: string | null;
+  janela_conversao: number | null;
+}
+
+interface GrupoProduto {
+  id: string;
+  nome: string;
 }
 
 interface ResumoCampanha {
