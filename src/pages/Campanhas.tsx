@@ -50,6 +50,13 @@ interface Campanha {
   total_enviados: number | null;
   total_responderam: number | null;
   created_at: string;
+  grupo_produto: string | null;
+  janela_conversao: number | null;
+}
+
+interface GrupoProduto {
+  id: string;
+  nome: string;
 }
 
 interface ResumoCampanha {
@@ -131,6 +138,9 @@ export default function Campanhas() {
   const [formHora, setFormHora] = useState('18:00');
   const [formPublico, setFormPublico] = useState('');
   const [formMensagem, setFormMensagem] = useState('');
+  const [formGrupo, setFormGrupo] = useState('');
+  const [formJanela, setFormJanela] = useState(7);
+  const [gruposProdutos, setGruposProdutos] = useState<GrupoProduto[]>([]);
   const [saving, setSaving] = useState(false);
 
   const orgsComModulo = useMemo(() => orgs.filter(o => o.modulos?.campanhas === true), [orgs]);
@@ -173,6 +183,15 @@ export default function Campanhas() {
 
   useEffect(() => { loadCampanhas(); loadResumo(); }, [selectedOrg]);
 
+  /* load grupos_produtos for form */
+  useEffect(() => {
+    const orgId = formOrgId || selectedOrg?.id;
+    if (!orgId) { setGruposProdutos([]); return; }
+    supabase.from('grupos_produtos').select('id, nome')
+      .eq('organizacao_id', orgId).order('nome')
+      .then(({ data }) => setGruposProdutos((data as GrupoProduto[]) ?? []));
+  }, [formOrgId, selectedOrg]);
+
   /* ── derived ── */
 
   const filteredOrgs = useMemo(
@@ -208,6 +227,7 @@ export default function Campanhas() {
   const resetForm = () => {
     setFormOrgId(''); setFormNome(''); setFormData(undefined);
     setFormHora('18:00'); setFormPublico(''); setFormMensagem('');
+    setFormGrupo(''); setFormJanela(7);
     setEditingCampanha(null);
   };
 
@@ -217,6 +237,8 @@ export default function Campanhas() {
     setFormNome(c.nome);
     setFormMensagem(c.mensagem ?? '');
     setFormPublico(c.filtro_clientes ?? '');
+    setFormGrupo(c.grupo_produto || '');
+    setFormJanela(c.janela_conversao || 7);
     if (c.data_disparo) {
       const d = new Date(c.data_disparo);
       setFormData(d);
@@ -249,6 +271,8 @@ export default function Campanhas() {
       mensagem: formMensagem,
       filtro_clientes: formPublico || null,
       data_disparo: dataDisparo,
+      grupo_produto: formGrupo || null,
+      janela_conversao: formJanela,
     };
 
     let error;
@@ -397,7 +421,7 @@ export default function Campanhas() {
               <CardContent className="p-5 flex items-center gap-4">
                 <div className="rounded-lg bg-purple-100 p-3"><TrendingUp className="h-5 w-5 text-purple-600" /></div>
                 <div>
-                  <p className="text-sm text-slate-500">Taxa de resposta</p>
+                  <p className="text-sm text-slate-500">Conversões</p>
                   <p className="text-2xl font-bold text-slate-800">{metrics.taxaMedia}%</p>
                 </div>
               </CardContent>
@@ -609,6 +633,40 @@ export default function Campanhas() {
                   </div>
                 </div>
 
+                {/* Filtrar por produto */}
+                <div className="space-y-2">
+                  <Label>Filtrar por produto</Label>
+                  <Select value={formGrupo} onValueChange={setFormGrupo}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todos os produtos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Todos os produtos</SelectItem>
+                      {gruposProdutos.map(g => (
+                        <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-400">Opcional. Filtra clientes que já compraram itens deste grupo.</p>
+                </div>
+
+                {/* Janela de conversão */}
+                <div className="space-y-2">
+                  <Label>Janela de conversão</Label>
+                  <Select value={String(formJanela)} onValueChange={v => setFormJanela(Number(v))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3">3 dias</SelectItem>
+                      <SelectItem value="5">5 dias</SelectItem>
+                      <SelectItem value="7">7 dias (recomendado)</SelectItem>
+                      <SelectItem value="14">14 dias</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-400">Período após envio para contabilizar conversões.</p>
+                </div>
+
                 {/* Mensagem */}
                 <div className="space-y-2">
                   <Label>Mensagem</Label>
@@ -630,6 +688,11 @@ export default function Campanhas() {
                         {previewMsg}
                       </div>
                     </div>
+                    {formGrupo && (
+                      <p className="text-xs text-slate-400 mt-2">
+                        📎 Filtro: clientes que compraram {gruposProdutos.find(g => g.id === formGrupo)?.nome ?? formGrupo}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -708,7 +771,7 @@ export default function Campanhas() {
                         </Card>
                         <Card className="shadow-sm border-slate-100">
                           <CardContent className="p-3 text-center">
-                            <p className="text-slate-400 text-xs">Taxa</p>
+                            <p className="text-slate-400 text-xs">Conversões</p>
                             <p className="text-lg font-bold text-emerald-600">{taxa(viewCampanha.total_enviados, viewCampanha.total_responderam)}%</p>
                           </CardContent>
                         </Card>
@@ -855,7 +918,7 @@ function CampanhaCard({ campanha: c, orgName, onView, onEdit, onCancel, onDelete
                 </div>
                 <div className="text-center">
                   <p className="font-bold text-blue-600">{(c.total_enviados ?? 0) > 0 ? ((c.total_responderam ?? 0) / (c.total_enviados ?? 1) * 100).toFixed(1) + '%' : '—'}</p>
-                  <p className="text-xs text-slate-400">Taxa</p>
+                  <p className="text-xs text-slate-400">Conversões</p>
                 </div>
               </div>
             )}
