@@ -138,6 +138,9 @@ export default function Campanhas() {
   const [formHora, setFormHora] = useState('18:00');
   const [formPublico, setFormPublico] = useState('');
   const [formMensagem, setFormMensagem] = useState('');
+  const [formGrupo, setFormGrupo] = useState('');
+  const [formJanela, setFormJanela] = useState(7);
+  const [gruposProdutos, setGruposProdutos] = useState<GrupoProduto[]>([]);
   const [saving, setSaving] = useState(false);
 
   const orgsComModulo = useMemo(() => orgs.filter(o => o.modulos?.campanhas === true), [orgs]);
@@ -215,6 +218,7 @@ export default function Campanhas() {
   const resetForm = () => {
     setFormOrgId(''); setFormNome(''); setFormData(undefined);
     setFormHora('18:00'); setFormPublico(''); setFormMensagem('');
+    setFormGrupo(''); setFormJanela(7);
     setEditingCampanha(null);
   };
 
@@ -224,6 +228,8 @@ export default function Campanhas() {
     setFormNome(c.nome);
     setFormMensagem(c.mensagem ?? '');
     setFormPublico(c.filtro_clientes ?? '');
+    setFormGrupo(c.grupo_produto || '');
+    setFormJanela(c.janela_conversao || 7);
     if (c.data_disparo) {
       const d = new Date(c.data_disparo);
       setFormData(d);
@@ -256,6 +262,8 @@ export default function Campanhas() {
       mensagem: formMensagem,
       filtro_clientes: formPublico || null,
       data_disparo: dataDisparo,
+      grupo_produto: formGrupo || null,
+      janela_conversao: formJanela,
     };
 
     let error;
@@ -404,7 +412,7 @@ export default function Campanhas() {
               <CardContent className="p-5 flex items-center gap-4">
                 <div className="rounded-lg bg-purple-100 p-3"><TrendingUp className="h-5 w-5 text-purple-600" /></div>
                 <div>
-                  <p className="text-sm text-slate-500">Taxa de resposta</p>
+                  <p className="text-sm text-slate-500">Conversões</p>
                   <p className="text-2xl font-bold text-slate-800">{metrics.taxaMedia}%</p>
                 </div>
               </CardContent>
@@ -715,7 +723,7 @@ export default function Campanhas() {
                         </Card>
                         <Card className="shadow-sm border-slate-100">
                           <CardContent className="p-3 text-center">
-                            <p className="text-slate-400 text-xs">Taxa</p>
+                            <p className="text-slate-400 text-xs">Conversões</p>
                             <p className="text-lg font-bold text-emerald-600">{taxa(viewCampanha.total_enviados, viewCampanha.total_responderam)}%</p>
                           </CardContent>
                         </Card>
