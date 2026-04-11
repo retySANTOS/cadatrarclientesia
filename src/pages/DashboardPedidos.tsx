@@ -107,7 +107,7 @@ export default function DashboardPedidos() {
     setLoading(true);
 
     const fetchPedidos = supabase
-      .from('pedidos')
+      .from('dashboard_pedidos')
       .select('*')
       .eq('organizacao_id', selectedOrg.id)
       .gte('created_at', start)
