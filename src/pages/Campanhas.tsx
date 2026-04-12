@@ -123,6 +123,10 @@ export default function Campanhas() {
   const [resumo, setResumo] = useState<ResumoCampanha[]>([]);
   const [loadingResumo, setLoadingResumo] = useState(false);
 
+  /* conversoes */
+  const [conversoes, setConversoes] = useState<any[]>([]);
+  const [loadingConversoes, setLoadingConversoes] = useState(false);
+
   /* ui */
   const [activeTab, setActiveTab] = useState('campanhas');
   const [statusFilter, setStatusFilter] = useState('todas');
