@@ -23,8 +23,13 @@ import {
 } from '@/components/ui/select';
 import {
   Megaphone, Users, TrendingUp, Clock, Search, Plus, Send, BarChart3,
-  AlertCircle, CalendarIcon, Pencil, XCircle, Trash2,
+  AlertCircle, CalendarIcon, Pencil, XCircle, Trash2, ShoppingCart, DollarSign,
 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
