@@ -142,6 +142,8 @@ export default function Campanhas() {
   const [formJanela, setFormJanela] = useState(7);
   const [gruposProdutos, setGruposProdutos] = useState<GrupoProduto[]>([]);
   const [saving, setSaving] = useState(false);
+  const [previewCount, setPreviewCount] = useState<number | null>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
 
   const orgsComModulo = useMemo(() => orgs.filter(o => o.modulos?.campanhas === true), [orgs]);
 
@@ -222,12 +224,31 @@ export default function Campanhas() {
 
   const moduloAtivo = selectedOrg?.modulos?.campanhas === true;
 
+  useEffect(() => { setPreviewCount(null); }, [formPublico, formGrupo, formOrgId]);
+
+  const handlePreviewPublico = async () => {
+    if (!formOrgId || !formPublico) {
+      toast.error('Selecione organização e público-alvo');
+      return;
+    }
+    setLoadingPreview(true);
+    const { data, error } = await supabase.rpc('buscar_clientes_campanha', {
+      p_org_id: formOrgId,
+      p_filtro: formPublico,
+      p_grupo: formGrupo && formGrupo !== 'todos' ? formGrupo : null,
+    });
+    setLoadingPreview(false);
+    if (error) { toast.error('Erro ao buscar público'); return; }
+    setPreviewCount(data?.length ?? 0);
+  };
+
   /* ── save (insert or update) ── */
 
   const resetForm = () => {
     setFormOrgId(''); setFormNome(''); setFormData(undefined);
     setFormHora('18:00'); setFormPublico(''); setFormMensagem('');
     setFormGrupo(''); setFormJanela(7);
+    setPreviewCount(null);
     setEditingCampanha(null);
   };
 
@@ -648,6 +669,27 @@ export default function Campanhas() {
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-slate-400">Opcional. Filtra clientes que já compraram itens deste grupo.</p>
+                </div>
+
+                {/* Pré-visualizar público */}
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePreviewPublico}
+                    disabled={loadingPreview || !formOrgId || !formPublico}
+                    className="gap-2"
+                  >
+                    <Users className="h-4 w-4" />
+                    {loadingPreview ? 'Buscando...' : 'Pré-visualizar público'}
+                  </Button>
+                  {previewCount !== null && (
+                    <p className="text-sm font-medium text-blue-600">
+                      📊 {previewCount} cliente{previewCount !== 1 ? 's' : ''}{' '}
+                      {previewCount !== 1 ? 'serão alcançados' : 'será alcançado'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Janela de conversão */}
