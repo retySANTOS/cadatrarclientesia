@@ -23,8 +23,13 @@ import {
 } from '@/components/ui/select';
 import {
   Megaphone, Users, TrendingUp, Clock, Search, Plus, Send, BarChart3,
-  AlertCircle, CalendarIcon, Pencil, XCircle, Trash2,
+  AlertCircle, CalendarIcon, Pencil, XCircle, Trash2, ShoppingCart, DollarSign,
 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -118,6 +123,10 @@ export default function Campanhas() {
   const [resumo, setResumo] = useState<ResumoCampanha[]>([]);
   const [loadingResumo, setLoadingResumo] = useState(false);
 
+  /* conversoes */
+  const [conversoes, setConversoes] = useState<any[]>([]);
+  const [loadingConversoes, setLoadingConversoes] = useState(false);
+
   /* ui */
   const [activeTab, setActiveTab] = useState('campanhas');
   const [statusFilter, setStatusFilter] = useState('todas');
@@ -183,7 +192,17 @@ export default function Campanhas() {
     });
   };
 
-  useEffect(() => { loadCampanhas(); loadResumo(); }, [selectedOrg]);
+  const loadConversoes = () => {
+    setLoadingConversoes(true);
+    let q = supabase.from('resumo_conversoes_campanhas').select('*');
+    if (selectedOrg) q = q.eq('organizacao_id', selectedOrg.id);
+    q.then(({ data }) => {
+      setConversoes(data ?? []);
+      setLoadingConversoes(false);
+    });
+  };
+
+  useEffect(() => { loadCampanhas(); loadResumo(); loadConversoes(); }, [selectedOrg]);
 
   /* load grupos_produtos for form */
   useEffect(() => {
@@ -221,6 +240,15 @@ export default function Campanhas() {
       agendadas: campanhas.filter(c => c.status === 'agendada').length,
     };
   }, [campanhas]);
+
+  const metricsConversao = useMemo(() => {
+    const totalConversoes = conversoes.reduce((s, c) => s + Number(c.total_conversoes ?? 0), 0);
+    const receitaTotal = conversoes.reduce((s, c) => s + Number(c.receita_gerada ?? 0), 0);
+    const taxaMedia = conversoes.length > 0
+      ? (conversoes.reduce((s, c) => s + Number(c.taxa_conversao ?? 0), 0) / conversoes.length).toFixed(1)
+      : '0';
+    return { totalConversoes, receitaTotal, taxaMedia };
+  }, [conversoes]);
 
   const moduloAtivo = selectedOrg?.modulos?.campanhas === true;
 
@@ -419,7 +447,7 @@ export default function Campanhas() {
           )}
 
           {/* Metric cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <Card className="shadow-sm border-slate-100">
               <CardContent className="p-5 flex items-center gap-4">
                 <div className="rounded-lg bg-blue-100 p-3"><Megaphone className="h-5 w-5 text-blue-600" /></div>
@@ -440,10 +468,20 @@ export default function Campanhas() {
             </Card>
             <Card className="shadow-sm border-slate-100">
               <CardContent className="p-5 flex items-center gap-4">
-                <div className="rounded-lg bg-purple-100 p-3"><TrendingUp className="h-5 w-5 text-purple-600" /></div>
+                <div className="rounded-lg bg-purple-100 p-3"><ShoppingCart className="h-5 w-5 text-purple-600" /></div>
                 <div>
                   <p className="text-sm text-slate-500">Conversões</p>
-                  <p className="text-2xl font-bold text-slate-800">{metrics.taxaMedia}%</p>
+                  <p className="text-2xl font-bold text-slate-800">{metricsConversao.totalConversoes}</p>
+                  <p className="text-xs text-slate-400">{metricsConversao.taxaMedia}% taxa</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm border-slate-100">
+              <CardContent className="p-5 flex items-center gap-4">
+                <div className="rounded-lg bg-emerald-100 p-3"><DollarSign className="h-5 w-5 text-emerald-600" /></div>
+                <div>
+                  <p className="text-sm text-slate-500">Receita gerada</p>
+                  <p className="text-2xl font-bold text-slate-800">R$ {metricsConversao.receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                 </div>
               </CardContent>
             </Card>
@@ -514,56 +552,117 @@ export default function Campanhas() {
 
             {/* ─── ABA RELATÓRIO ─── */}
             <TabsContent value="relatorio">
-              {loadingResumo ? (
+              {loadingConversoes ? (
                 <div className="space-y-3 mt-4">
                   {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-lg" />)}
                 </div>
-              ) : resumo.length === 0 ? (
-                <div className="text-center text-slate-400 py-16">Nenhum dado de campanha disponível</div>
               ) : (
-                <div className="space-y-3 mt-4">
-                  {resumo.map(r => {
-                    const t = taxa(r.total_enviados, r.total_responderam);
-                    return (
-                      <Card key={r.id} className="shadow-sm border-slate-100">
-                        <CardContent className="p-5">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap mb-1">
-                                <span className="font-semibold text-slate-800">{r.nome}</span>
-                                <Badge className={cn('text-xs border', STATUS_COLORS[r.status] ?? STATUS_COLORS.rascunho)}>
-                                  {r.status}
-                                </Badge>
-                                {r.organizacao_nome && (
-                                  <Badge variant="outline" className="text-xs border-purple-200 text-purple-600">{r.organizacao_nome}</Badge>
-                                )}
-                              </div>
-                              {r.data_disparo && (
-                                <p className="text-xs text-slate-400">
-                                  {format(new Date(r.data_disparo), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-6 text-sm">
-                              <div className="text-center">
-                                <p className="text-slate-400 text-xs">Enviados</p>
-                                <p className="font-semibold text-slate-700">{(r.total_enviados ?? 0).toLocaleString('pt-BR')}</p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-slate-400 text-xs">Responderam</p>
-                                <p className="font-semibold text-slate-700">{(r.total_responderam ?? 0).toLocaleString('pt-BR')}</p>
-                              </div>
-                              <div className="text-center min-w-[80px]">
-                                <p className="text-slate-400 text-xs">Taxa</p>
-                                <p className="font-semibold text-emerald-600">{t}%</p>
-                                <Progress value={t} className="h-1.5 mt-1 [&>div]:bg-emerald-500" />
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
+                <div className="space-y-6 mt-4">
+                  {/* Cards resumo */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card className="shadow-sm border-slate-100">
+                      <CardContent className="p-5 text-center">
+                        <p className="text-sm text-slate-500">Total campanhas</p>
+                        <p className="text-2xl font-bold text-slate-800">{conversoes.length}</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="shadow-sm border-slate-100">
+                      <CardContent className="p-5 text-center">
+                        <p className="text-sm text-slate-500">Conversões</p>
+                        <p className="text-2xl font-bold text-slate-800">{metricsConversao.totalConversoes}</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="shadow-sm border-slate-100">
+                      <CardContent className="p-5 text-center">
+                        <p className="text-sm text-slate-500">Receita total</p>
+                        <p className="text-2xl font-bold text-slate-800">R$ {metricsConversao.receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="shadow-sm border-slate-100">
+                      <CardContent className="p-5 text-center">
+                        <p className="text-sm text-slate-500">Ticket médio</p>
+                        <p className="text-2xl font-bold text-slate-800">
+                          R$ {(metricsConversao.totalConversoes > 0
+                            ? (metricsConversao.receitaTotal / metricsConversao.totalConversoes)
+                            : 0
+                          ).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Gráfico de barras */}
+                  {conversoes.length === 0 ? (
+                    <div className="text-center text-slate-400 py-16">Sem dados de conversão ainda</div>
+                  ) : (
+                    <Card className="shadow-sm border-slate-100">
+                      <CardContent className="p-5">
+                        <h3 className="text-sm font-semibold text-slate-700 mb-4">Conversões por campanha</h3>
+                        <ChartContainer config={{
+                          conversoes: { label: 'Conversões', color: '#3b82f6' },
+                          receita: { label: 'Receita (÷100)', color: '#10b981' },
+                        }} className="h-[300px] w-full">
+                          <BarChart data={conversoes}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="campanha_nome" tick={{ fontSize: 12 }} />
+                            <YAxis />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Bar dataKey="total_conversoes" name="Conversões" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey={(d: any) => Number(d.receita_gerada ?? 0) / 100} name="Receita (÷100)" fill="#10b981" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        </ChartContainer>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Tabela detalhada */}
+                  {conversoes.length > 0 && (
+                    <Card className="shadow-sm border-slate-100">
+                      <CardContent className="p-5">
+                        <h3 className="text-sm font-semibold text-slate-700 mb-4">Detalhamento por campanha</h3>
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Campanha</TableHead>
+                                <TableHead>Data envio</TableHead>
+                                <TableHead className="text-right">Enviados</TableHead>
+                                <TableHead className="text-right">Conversões</TableHead>
+                                <TableHead className="text-center">Taxa</TableHead>
+                                <TableHead className="text-right">Receita</TableHead>
+                                <TableHead className="text-right">Ticket médio</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {conversoes.map((c: any, i: number) => {
+                                const tc = Number(c.total_conversoes ?? 0);
+                                const rec = Number(c.receita_gerada ?? 0);
+                                const txc = Number(c.taxa_conversao ?? 0);
+                                return (
+                                  <TableRow key={i}>
+                                    <TableCell className="font-medium">{c.campanha_nome}</TableCell>
+                                    <TableCell>{c.data_disparo ? format(new Date(c.data_disparo), 'dd/MM/yyyy HH:mm') : '—'}</TableCell>
+                                    <TableCell className="text-right">{(c.total_enviados ?? 0).toLocaleString('pt-BR')}</TableCell>
+                                    <TableCell className="text-right">{tc}</TableCell>
+                                    <TableCell>
+                                      <div className="flex items-center gap-2 justify-center">
+                                        <span className="text-sm font-medium text-emerald-600">{txc}%</span>
+                                        <Progress value={txc} className="h-1.5 w-16 [&>div]:bg-emerald-500" />
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="text-right">R$ {rec.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</TableCell>
+                                    <TableCell className="text-right">
+                                      {tc > 0 ? `R$ ${(rec / tc).toFixed(2)}` : '—'}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               )}
             </TabsContent>
@@ -797,28 +896,37 @@ export default function Campanhas() {
                     </div>
 
                     {/* Métricas se enviada */}
-                    {viewCampanha.status === 'enviada' && (
-                      <div className="grid grid-cols-3 gap-3">
-                        <Card className="shadow-sm border-slate-100">
-                          <CardContent className="p-3 text-center">
-                            <p className="text-slate-400 text-xs">Enviados</p>
-                            <p className="text-lg font-bold text-slate-800">{(viewCampanha.total_enviados ?? 0).toLocaleString('pt-BR')}</p>
-                          </CardContent>
-                        </Card>
-                        <Card className="shadow-sm border-slate-100">
-                          <CardContent className="p-3 text-center">
-                            <p className="text-slate-400 text-xs">Responderam</p>
-                            <p className="text-lg font-bold text-slate-800">{(viewCampanha.total_responderam ?? 0).toLocaleString('pt-BR')}</p>
-                          </CardContent>
-                        </Card>
-                        <Card className="shadow-sm border-slate-100">
-                          <CardContent className="p-3 text-center">
-                            <p className="text-slate-400 text-xs">Conversões</p>
-                            <p className="text-lg font-bold text-emerald-600">{taxa(viewCampanha.total_enviados, viewCampanha.total_responderam)}%</p>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    )}
+                    {viewCampanha.status === 'enviada' && (() => {
+                      const viewConversao = conversoes.find(c => c.campanha_id === viewCampanha?.id);
+                      return (
+                        <div className="grid grid-cols-4 gap-3">
+                          <Card className="shadow-sm border-slate-100">
+                            <CardContent className="p-3 text-center">
+                              <p className="text-slate-400 text-xs">Enviados</p>
+                              <p className="text-lg font-bold text-slate-800">{(viewCampanha.total_enviados ?? 0).toLocaleString('pt-BR')}</p>
+                            </CardContent>
+                          </Card>
+                          <Card className="shadow-sm border-slate-100">
+                            <CardContent className="p-3 text-center">
+                              <p className="text-slate-400 text-xs">Conversões</p>
+                              <p className="text-lg font-bold text-slate-800">{viewConversao?.total_conversoes ?? 0}</p>
+                            </CardContent>
+                          </Card>
+                          <Card className="shadow-sm border-slate-100">
+                            <CardContent className="p-3 text-center">
+                              <p className="text-slate-400 text-xs">Receita</p>
+                              <p className="text-lg font-bold text-emerald-600">R$ {(Number(viewConversao?.receita_gerada ?? 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                            </CardContent>
+                          </Card>
+                          <Card className="shadow-sm border-slate-100">
+                            <CardContent className="p-3 text-center">
+                              <p className="text-slate-400 text-xs">Taxa</p>
+                              <p className="text-lg font-bold text-emerald-600">{viewConversao?.taxa_conversao ?? 0}%</p>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   <DialogFooter>
