@@ -664,9 +664,7 @@ export default function Campanhas() {
                     </Card>
                   )}
                 </div>
-              )}
-                </div>
-              )}
+            </TabsContent>
             </TabsContent>
           </Tabs>
 
