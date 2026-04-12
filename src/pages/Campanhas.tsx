@@ -192,7 +192,17 @@ export default function Campanhas() {
     });
   };
 
-  useEffect(() => { loadCampanhas(); loadResumo(); }, [selectedOrg]);
+  const loadConversoes = () => {
+    setLoadingConversoes(true);
+    let q = supabase.from('resumo_conversoes_campanhas').select('*');
+    if (selectedOrg) q = q.eq('organizacao_id', selectedOrg.id);
+    q.then(({ data }) => {
+      setConversoes(data ?? []);
+      setLoadingConversoes(false);
+    });
+  };
+
+  useEffect(() => { loadCampanhas(); loadResumo(); loadConversoes(); }, [selectedOrg]);
 
   /* load grupos_produtos for form */
   useEffect(() => {
