@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Copy, Eye, EyeOff, Maximize2, Crown, Rocket } from 'lucide-react';
+import { Copy, Eye, EyeOff, Maximize2, Crown, Rocket, Save, Pencil, Trash2 } from 'lucide-react';
 import { IntegrationCheck } from '@/components/IntegrationCheck';
 import { PromptHistory } from '@/components/PromptHistory';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { generateSlug } from '@/lib/generateSlug';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -179,12 +180,27 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
   const [saving, setSaving] = useState(false);
   const [promptExpanded, setPromptExpanded] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [avisoTemplates, setAvisoTemplates] = useState<{id: string, nome: string, texto: string}[]>([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [saveTemplateName, setSaveTemplateName] = useState('');
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<{id: string, nome: string, texto: string} | null>(null);
+
+  const reloadTemplates = async (orgId: string) => {
+    const { data } = await supabase.from('avisos_templates')
+      .select('id, nome, texto')
+      .eq('organizacao_id', orgId)
+      .order('nome');
+    setAvisoTemplates(data ?? []);
+  };
 
   useEffect(() => {
     if (organizacao) {
       setForm({ ...organizacao, modulos: { ...DEFAULT_MODULOS, ...organizacao.modulos } });
+      if (organizacao.id) reloadTemplates(organizacao.id);
     } else {
       setForm(emptyOrg);
+      setAvisoTemplates([]);
     }
   }, [organizacao, open]);
 
@@ -284,7 +300,102 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
             <div className="space-y-2">
               <Label>Aviso do dia</Label>
               <Textarea rows={2} value={form.aviso_do_dia} onChange={(e) => update('aviso_do_dia', e.target.value)} placeholder="Ex: Hoje temos peixe especial de Sexta Santa! 🐟 (deixe vazio quando não tiver aviso)" />
-              <p className="text-xs text-muted-foreground">O agente menciona esse aviso naturalmente quando o cliente puxa conversa. Apague quando a promoção acabar.</p>
+              
+              <div className="flex flex-wrap items-center gap-2 mt-2">
+                {/* Carregar template */}
+                {avisoTemplates.length > 0 && (
+                  <Select onValueChange={(templateId) => {
+                    const t = avisoTemplates.find(t => t.id === templateId);
+                    if (t) setForm(prev => ({ ...prev, aviso_do_dia: t.texto }));
+                  }}>
+                    <SelectTrigger className="w-[180px] h-8 text-xs">
+                      <SelectValue placeholder="Carregar template" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {avisoTemplates.map(t => (
+                        <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {/* Salvar como template */}
+                {!showSaveTemplate ? (
+                  <Button type="button" variant="outline" size="sm" className="h-8 gap-1 text-xs"
+                    onClick={() => setShowSaveTemplate(true)}
+                    disabled={!form.aviso_do_dia?.trim()}
+                  >
+                    <Save className="h-3.5 w-3.5" /> Salvar template
+                  </Button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Input className="h-8 w-40 text-xs" placeholder="Nome do template"
+                      value={saveTemplateName} onChange={e => setSaveTemplateName(e.target.value)} />
+                    <Button type="button" size="sm" className="h-8 text-xs" onClick={async () => {
+                      if (!saveTemplateName.trim() || !form.aviso_do_dia?.trim()) return;
+                      const orgId = organizacao?.id;
+                      if (!orgId) return;
+                      const { error } = await supabase.from('avisos_templates').insert({
+                        organizacao_id: orgId,
+                        nome: saveTemplateName.trim(),
+                        texto: form.aviso_do_dia,
+                      });
+                      if (error) { toast.error('Erro ao salvar template'); return; }
+                      toast.success('Template salvo!');
+                      setSaveTemplateName('');
+                      setShowSaveTemplate(false);
+                      reloadTemplates(orgId);
+                    }}>
+                      Salvar
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" className="h-8 text-xs"
+                      onClick={() => { setShowSaveTemplate(false); setSaveTemplateName(''); }}>
+                      Cancelar
+                    </Button>
+                  </div>
+                )}
+
+                {/* Editar template */}
+                {avisoTemplates.length > 0 && (
+                  <Select onValueChange={(templateId) => {
+                    const t = avisoTemplates.find(t => t.id === templateId);
+                    if (t) setEditingTemplate({ ...t });
+                  }}>
+                    <SelectTrigger className="w-[50px] h-8 text-xs">
+                      <Pencil className="h-3.5 w-3.5" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {avisoTemplates.map(t => (
+                        <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {/* Excluir template */}
+                {avisoTemplates.length > 0 && (
+                  <Select onValueChange={async (templateId) => {
+                    const orgId = organizacao?.id;
+                    if (!orgId) return;
+                    const { error } = await supabase.from('avisos_templates')
+                      .delete().eq('id', templateId);
+                    if (error) { toast.error('Erro ao excluir'); return; }
+                    toast.success('Template excluído');
+                    reloadTemplates(orgId);
+                  }}>
+                    <SelectTrigger className="w-[50px] h-8 text-xs">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {avisoTemplates.map(t => (
+                        <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              <p className="text-xs text-muted-foreground">Salve textos recorrentes como template para reutilizar rapidamente.</p>
             </div>
           </TabsContent>
 
@@ -485,6 +596,45 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
           <div className="flex justify-end pt-2">
             <Button onClick={() => setPromptExpanded(false)}>Fechar</Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog editar template */}
+      <Dialog open={!!editingTemplate} onOpenChange={v => { if (!v) setEditingTemplate(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar template</DialogTitle>
+            <DialogDescription>Altere o nome ou o texto do template.</DialogDescription>
+          </DialogHeader>
+          {editingTemplate && (
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label>Nome do template</Label>
+                <Input value={editingTemplate.nome} onChange={e => setEditingTemplate({ ...editingTemplate, nome: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Texto</Label>
+                <Textarea rows={3} value={editingTemplate.texto} onChange={e => setEditingTemplate({ ...editingTemplate, texto: e.target.value })} />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingTemplate(null)}>Cancelar</Button>
+            <Button onClick={async () => {
+              if (!editingTemplate || !editingTemplate.nome.trim() || !editingTemplate.texto.trim()) return;
+              const orgId = organizacao?.id;
+              if (!orgId) return;
+              const { error } = await supabase.from('avisos_templates')
+                .update({ nome: editingTemplate.nome.trim(), texto: editingTemplate.texto.trim() })
+                .eq('id', editingTemplate.id);
+              if (error) { toast.error('Erro ao atualizar template'); return; }
+              toast.success('Template atualizado!');
+              setEditingTemplate(null);
+              reloadTemplates(orgId);
+            }}>
+              Salvar alterações
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
