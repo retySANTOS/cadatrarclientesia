@@ -24,7 +24,6 @@ export interface ModulosConfig {
   integracao_ifood: boolean;
   programa_fidelidade: boolean;
   campanhas: boolean;
-  dashboard_pedidos: boolean;
 }
 
 const DEFAULT_MODULOS: ModulosConfig = {
@@ -35,7 +34,6 @@ const DEFAULT_MODULOS: ModulosConfig = {
   integracao_ifood: false,
   programa_fidelidade: false,
   campanhas: false,
-  dashboard_pedidos: false,
 };
 
 export interface Organizacao {
@@ -553,7 +551,6 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
                 {([
                   { key: 'integracao_ifood' as const, label: 'Integração iFood', desc: 'Recebe pedidos do iFood no mesmo sistema' },
                   { key: 'programa_fidelidade' as const, label: 'Programa fidelidade', desc: 'Pontos por pedido e recompensas' },
-                  { key: 'dashboard_pedidos' as const, label: 'Dashboard pedidos', desc: 'Analytics de vendas e ticket médio' },
                 ]).map((m) => (
                   <div key={m.key} className="flex items-center justify-between rounded-lg border p-3 opacity-60">
                     <div className="flex items-center gap-2">
