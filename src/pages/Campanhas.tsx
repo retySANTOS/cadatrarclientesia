@@ -24,6 +24,7 @@ import {
 import {
   Megaphone, Users, TrendingUp, Clock, Search, Plus, Send, BarChart3,
   AlertCircle, CalendarIcon, Pencil, XCircle, Trash2, ShoppingCart, DollarSign,
+  Archive, Download,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -84,6 +85,7 @@ const STATUS_COLORS: Record<string, string> = {
   enviada: 'bg-emerald-100 text-emerald-700 border-emerald-200',
   cancelada: 'bg-red-100 text-red-700 border-red-200',
   rascunho: 'bg-slate-100 text-slate-600 border-slate-200',
+  arquivada: 'bg-slate-50 text-slate-400 border-slate-200',
 };
 
 const PUBLICO_LABELS: Record<string, { title: string; desc: string }> = {
@@ -221,7 +223,7 @@ export default function Campanhas() {
   );
 
   const filteredCampanhas = useMemo(() => {
-    if (statusFilter === 'todas') return campanhas;
+    if (statusFilter === 'todas') return campanhas.filter(c => c.status !== 'arquivada');
     return campanhas.filter(c => c.status === statusFilter);
   }, [campanhas, statusFilter]);
 
@@ -347,6 +349,65 @@ export default function Campanhas() {
     resetForm();
     loadCampanhas();
     loadResumo();
+  };
+
+  /* ── archive campanha ── */
+  const handleArchive = async (c: Campanha) => {
+    const { error } = await supabase.from('campanhas').update({ status: 'arquivada' }).eq('id', c.id);
+    if (error) { toast.error('Erro ao arquivar'); return; }
+    toast.success('Campanha arquivada');
+    loadCampanhas(); loadResumo(); loadConversoes();
+  };
+
+  /* ── export functions ── */
+  const handleExportExcel = () => {
+    if (conversoes.length === 0) { toast.error('Sem dados para exportar'); return; }
+    const headers = ['Campanha', 'Data Envio', 'Enviados', 'Conversões', 'Taxa %', 'Receita', 'Ticket Médio'];
+    const rows = conversoes.map((c: any) => [
+      c.campanha_nome,
+      c.data_disparo ? format(new Date(c.data_disparo), 'dd/MM/yyyy HH:mm') : '',
+      c.total_enviados ?? 0,
+      c.total_conversoes ?? 0,
+      c.taxa_conversao ?? 0,
+      Number(c.receita_gerada ?? 0).toFixed(2),
+      c.total_conversoes > 0 ? (c.receita_gerada / c.total_conversoes).toFixed(2) : '0.00',
+    ]);
+    let csv = '\uFEFF';
+    csv += headers.join(';') + '\n';
+    rows.forEach(row => { csv += row.join(';') + '\n'; });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'relatorio_campanhas.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('Relatório exportado!');
+  };
+
+  const handleExportCSV = () => {
+    if (conversoes.length === 0) { toast.error('Sem dados para exportar'); return; }
+    const headers = ['Campanha', 'Data Envio', 'Enviados', 'Conversões', 'Taxa %', 'Receita', 'Ticket Médio'];
+    const rows = conversoes.map((c: any) => [
+      c.campanha_nome,
+      c.data_disparo ? format(new Date(c.data_disparo), 'dd/MM/yyyy HH:mm') : '',
+      c.total_enviados ?? 0,
+      c.total_conversoes ?? 0,
+      c.taxa_conversao ?? 0,
+      Number(c.receita_gerada ?? 0).toFixed(2),
+      c.total_conversoes > 0 ? (c.receita_gerada / c.total_conversoes).toFixed(2) : '0.00',
+    ]);
+    let csv = '\uFEFF';
+    csv += headers.join(',') + '\n';
+    rows.forEach(row => { csv += row.join(',') + '\n'; });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'relatorio_campanhas_csv.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('Relatório exportado!');
   };
 
   /* ── cancel campanha ── */
@@ -507,7 +568,7 @@ export default function Campanhas() {
             <TabsContent value="campanhas">
               {/* Status pills */}
               <div className="flex flex-wrap gap-2 mb-4 mt-2">
-                {['todas', 'agendada', 'enviada', 'rascunho', 'cancelada'].map(s => (
+                {['todas', 'agendada', 'enviada', 'rascunho', 'cancelada', 'arquivada'].map(s => (
                   <button
                     key={s}
                     onClick={() => setStatusFilter(s)}
@@ -534,17 +595,17 @@ export default function Campanhas() {
                   {agendadas.length > 0 && (
                     <CampanhaSection title="AGENDADAS" items={agendadas} orgName={orgName}
                       onView={setViewCampanha} onEdit={openEdit}
-                      onCancel={setCancelTarget} onDelete={setDeleteTarget} />
+                      onCancel={setCancelTarget} onDelete={setDeleteTarget} onArchive={handleArchive} />
                   )}
                   {rascunhos.length > 0 && (
                     <CampanhaSection title="RASCUNHOS" items={rascunhos} orgName={orgName}
                       onView={setViewCampanha} onEdit={openEdit}
-                      onCancel={setCancelTarget} onDelete={setDeleteTarget} />
+                      onCancel={setCancelTarget} onDelete={setDeleteTarget} onArchive={handleArchive} />
                   )}
                   {historico.length > 0 && (
                     <CampanhaSection title="HISTÓRICO" items={historico} orgName={orgName}
                       onView={setViewCampanha} onEdit={openEdit}
-                      onCancel={setCancelTarget} onDelete={setDeleteTarget} />
+                      onCancel={setCancelTarget} onDelete={setDeleteTarget} onArchive={handleArchive} />
                   )}
                 </div>
               )}
@@ -558,6 +619,15 @@ export default function Campanhas() {
                 </div>
               ) : (
                 <div className="space-y-6 mt-4">
+                  {/* Export buttons */}
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" className="gap-2" onClick={handleExportExcel}>
+                      <Download className="h-4 w-4" /> Excel
+                    </Button>
+                    <Button variant="outline" size="sm" className="gap-2" onClick={handleExportCSV}>
+                      <Download className="h-4 w-4" /> CSV
+                    </Button>
+                  </div>
                   {/* Cards resumo */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <Card className="shadow-sm border-slate-100">
@@ -994,16 +1064,17 @@ interface CampanhaSectionProps {
   onEdit: (c: Campanha) => void;
   onCancel: (c: Campanha) => void;
   onDelete: (c: Campanha) => void;
+  onArchive: (c: Campanha) => void;
 }
 
-function CampanhaSection({ title, items, orgName, onView, onEdit, onCancel, onDelete }: CampanhaSectionProps) {
+function CampanhaSection({ title, items, orgName, onView, onEdit, onCancel, onDelete, onArchive }: CampanhaSectionProps) {
   return (
     <div>
       <h3 className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase mb-2">{title}</h3>
       <div className="space-y-2">
         {items.map(c => (
           <CampanhaCard key={c.id} campanha={c} orgName={orgName}
-            onView={onView} onEdit={onEdit} onCancel={onCancel} onDelete={onDelete} />
+            onView={onView} onEdit={onEdit} onCancel={onCancel} onDelete={onDelete} onArchive={onArchive} />
         ))}
       </div>
     </div>
@@ -1017,13 +1088,15 @@ interface CampanhaCardProps {
   onEdit: (c: Campanha) => void;
   onCancel: (c: Campanha) => void;
   onDelete: (c: Campanha) => void;
+  onArchive: (c: Campanha) => void;
 }
 
-function CampanhaCard({ campanha: c, orgName, onView, onEdit, onCancel, onDelete }: CampanhaCardProps) {
+function CampanhaCard({ campanha: c, orgName, onView, onEdit, onCancel, onDelete, onArchive }: CampanhaCardProps) {
   const t = taxa(c.total_enviados, c.total_responderam);
   const canEdit = ['agendada', 'rascunho'].includes(c.status);
   const canCancel = c.status === 'agendada';
   const canDelete = ['rascunho', 'cancelada'].includes(c.status);
+  const canArchive = ['enviada', 'cancelada'].includes(c.status);
 
   return (
     <Card
@@ -1094,6 +1167,17 @@ function CampanhaCard({ campanha: c, orgName, onView, onEdit, onCancel, onDelete
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Cancelar campanha</TooltipContent>
+              </Tooltip>
+            )}
+            {canArchive && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-slate-600"
+                    onClick={e => { e.stopPropagation(); onArchive(c); }}>
+                    <Archive className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Arquivar</TooltipContent>
               </Tooltip>
             )}
             {canDelete && (
