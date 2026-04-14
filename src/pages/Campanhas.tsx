@@ -292,6 +292,7 @@ export default function Campanhas() {
     setFormPublico(c.filtro_clientes ?? '');
     setFormGrupo(c.grupo_produto || '');
     setFormJanela(c.janela_conversao || 7);
+    setFormCupom(c.cupom || '');
     if (c.data_disparo) {
       const d = new Date(c.data_disparo);
       setFormData(d);
