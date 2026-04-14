@@ -58,6 +58,7 @@ interface Campanha {
   created_at: string;
   grupo_produto: string | null;
   janela_conversao: number | null;
+  cupom: string | null;
 }
 
 interface GrupoProduto {
