@@ -327,6 +327,7 @@ export default function Campanhas() {
       data_disparo: dataDisparo,
       grupo_produto: formGrupo && formGrupo !== 'todos' ? formGrupo : null,
       janela_conversao: formJanela,
+      cupom: formCupom.trim().toUpperCase() || null,
     };
 
     let error;
