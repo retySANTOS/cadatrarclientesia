@@ -709,6 +709,7 @@ export default function Campanhas() {
                             <TableHeader>
                               <TableRow>
                                 <TableHead>Campanha</TableHead>
+                                <TableHead>Cupom</TableHead>
                                 <TableHead>Data envio</TableHead>
                                 <TableHead className="text-right">Enviados</TableHead>
                                 <TableHead className="text-right">Conversões</TableHead>
@@ -725,6 +726,7 @@ export default function Campanhas() {
                                 return (
                                   <TableRow key={i}>
                                     <TableCell className="font-medium">{c.campanha_nome}</TableCell>
+                                    <TableCell>{c.cupom ? <Badge className="bg-blue-100 text-blue-700 border-blue-200">{c.cupom}</Badge> : '—'}</TableCell>
                                     <TableCell>{c.data_disparo ? format(new Date(c.data_disparo), 'dd/MM/yyyy HH:mm') : '—'}</TableCell>
                                     <TableCell className="text-right">{(c.total_enviados ?? 0).toLocaleString('pt-BR')}</TableCell>
                                     <TableCell className="text-right">{tc}</TableCell>
