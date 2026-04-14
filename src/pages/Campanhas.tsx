@@ -58,6 +58,7 @@ interface Campanha {
   created_at: string;
   grupo_produto: string | null;
   janela_conversao: number | null;
+  cupom: string | null;
 }
 
 interface GrupoProduto {
@@ -151,6 +152,7 @@ export default function Campanhas() {
   const [formMensagem, setFormMensagem] = useState('');
   const [formGrupo, setFormGrupo] = useState('');
   const [formJanela, setFormJanela] = useState(7);
+  const [formCupom, setFormCupom] = useState('');
   const [gruposProdutos, setGruposProdutos] = useState<GrupoProduto[]>([]);
   const [saving, setSaving] = useState(false);
   const [previewCount, setPreviewCount] = useState<number | null>(null);
@@ -277,7 +279,7 @@ export default function Campanhas() {
   const resetForm = () => {
     setFormOrgId(''); setFormNome(''); setFormData(undefined);
     setFormHora('18:00'); setFormPublico(''); setFormMensagem('');
-    setFormGrupo(''); setFormJanela(7);
+    setFormGrupo(''); setFormJanela(7); setFormCupom('');
     setPreviewCount(null);
     setEditingCampanha(null);
   };
@@ -290,6 +292,7 @@ export default function Campanhas() {
     setFormPublico(c.filtro_clientes ?? '');
     setFormGrupo(c.grupo_produto || '');
     setFormJanela(c.janela_conversao || 7);
+    setFormCupom(c.cupom || '');
     if (c.data_disparo) {
       const d = new Date(c.data_disparo);
       setFormData(d);
@@ -324,6 +327,7 @@ export default function Campanhas() {
       data_disparo: dataDisparo,
       grupo_produto: formGrupo && formGrupo !== 'todos' ? formGrupo : null,
       janela_conversao: formJanela,
+      cupom: formCupom.trim().toUpperCase() || null,
     };
 
     let error;
@@ -534,6 +538,16 @@ export default function Campanhas() {
                   <p className="text-sm text-slate-500">Conversões</p>
                   <p className="text-2xl font-bold text-slate-800">{metricsConversao.totalConversoes}</p>
                   <p className="text-xs text-slate-400">{metricsConversao.taxaMedia}% taxa</p>
+                  {(() => {
+                    const comCupom = conversoes.filter(c => c.cupom);
+                    const semCupom = conversoes.filter(c => !c.cupom);
+                    if (comCupom.length > 0) {
+                      const convCupom = comCupom.reduce((s: number, c: any) => s + Number(c.total_conversoes ?? 0), 0);
+                      const convJanela = semCupom.reduce((s: number, c: any) => s + Number(c.total_conversoes ?? 0), 0);
+                      return <p className="text-xs text-slate-400">{convCupom}x por cupom | {convJanela}x por janela</p>;
+                    }
+                    return null;
+                  })()}
                 </div>
               </CardContent>
             </Card>
@@ -695,6 +709,7 @@ export default function Campanhas() {
                             <TableHeader>
                               <TableRow>
                                 <TableHead>Campanha</TableHead>
+                                <TableHead>Cupom</TableHead>
                                 <TableHead>Data envio</TableHead>
                                 <TableHead className="text-right">Enviados</TableHead>
                                 <TableHead className="text-right">Conversões</TableHead>
@@ -711,6 +726,7 @@ export default function Campanhas() {
                                 return (
                                   <TableRow key={i}>
                                     <TableCell className="font-medium">{c.campanha_nome}</TableCell>
+                                    <TableCell>{c.cupom ? <Badge className="bg-blue-100 text-blue-700 border-blue-200">{c.cupom}</Badge> : '—'}</TableCell>
                                     <TableCell>{c.data_disparo ? format(new Date(c.data_disparo), 'dd/MM/yyyy HH:mm') : '—'}</TableCell>
                                     <TableCell className="text-right">{(c.total_enviados ?? 0).toLocaleString('pt-BR')}</TableCell>
                                     <TableCell className="text-right">{tc}</TableCell>
@@ -878,6 +894,17 @@ export default function Campanhas() {
                   <p className="text-xs text-slate-400">Período após envio para contabilizar conversões.</p>
                 </div>
 
+                {/* Código do cupom */}
+                <div className="space-y-2">
+                  <Label>Código do cupom</Label>
+                  <Input
+                    placeholder="Ex: FEIJUCA, VOLTANDO"
+                    value={formCupom}
+                    onChange={e => setFormCupom(e.target.value)}
+                  />
+                  <p className="text-xs text-slate-400">Opcional. Se preenchido, conversões são rastreadas pelo uso do cupom (mais preciso que janela de tempo).</p>
+                </div>
+
                 {/* Mensagem */}
                 <div className="space-y-2">
                   <Label>Mensagem</Label>
@@ -902,6 +929,11 @@ export default function Campanhas() {
                     {formGrupo && (
                       <p className="text-xs text-slate-400 mt-2">
                         📎 Filtro: clientes que compraram {gruposProdutos.find(g => g.id === formGrupo)?.nome ?? formGrupo}
+                      </p>
+                    )}
+                    {formCupom.trim() && (
+                      <p className="text-xs text-blue-500 mt-1">
+                        🎟️ Cupom: {formCupom.toUpperCase()} — conversões rastreadas por uso
                       </p>
                     )}
                   </div>
@@ -951,6 +983,14 @@ export default function Campanhas() {
                           {viewCampanha.data_disparo
                             ? format(new Date(viewCampanha.data_disparo), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })
                             : '—'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-slate-400 text-xs mb-0.5">Cupom</p>
+                        <p className="font-medium text-slate-700">
+                          {viewCampanha.cupom
+                            ? <Badge className="bg-blue-100 text-blue-700 border-blue-200">{viewCampanha.cupom}</Badge>
+                            : 'Sem cupom (usando janela de tempo)'}
                         </p>
                       </div>
                     </div>
