@@ -279,7 +279,7 @@ export default function Campanhas() {
   const resetForm = () => {
     setFormOrgId(''); setFormNome(''); setFormData(undefined);
     setFormHora('18:00'); setFormPublico(''); setFormMensagem('');
-    setFormGrupo(''); setFormJanela(7);
+    setFormGrupo(''); setFormJanela(7); setFormCupom('');
     setPreviewCount(null);
     setEditingCampanha(null);
   };
