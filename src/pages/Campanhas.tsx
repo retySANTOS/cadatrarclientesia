@@ -985,6 +985,14 @@ export default function Campanhas() {
                             : '—'}
                         </p>
                       </div>
+                      <div>
+                        <p className="text-slate-400 text-xs mb-0.5">Cupom</p>
+                        <p className="font-medium text-slate-700">
+                          {viewCampanha.cupom
+                            ? <Badge className="bg-blue-100 text-blue-700 border-blue-200">{viewCampanha.cupom}</Badge>
+                            : 'Sem cupom (usando janela de tempo)'}
+                        </p>
+                      </div>
                     </div>
 
                     {/* Mensagem */}
