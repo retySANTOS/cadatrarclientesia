@@ -538,6 +538,16 @@ export default function Campanhas() {
                   <p className="text-sm text-slate-500">Conversões</p>
                   <p className="text-2xl font-bold text-slate-800">{metricsConversao.totalConversoes}</p>
                   <p className="text-xs text-slate-400">{metricsConversao.taxaMedia}% taxa</p>
+                  {(() => {
+                    const comCupom = conversoes.filter(c => c.cupom);
+                    const semCupom = conversoes.filter(c => !c.cupom);
+                    if (comCupom.length > 0) {
+                      const convCupom = comCupom.reduce((s: number, c: any) => s + Number(c.total_conversoes ?? 0), 0);
+                      const convJanela = semCupom.reduce((s: number, c: any) => s + Number(c.total_conversoes ?? 0), 0);
+                      return <p className="text-xs text-slate-400">{convCupom}x por cupom | {convJanela}x por janela</p>;
+                    }
+                    return null;
+                  })()}
                 </div>
               </CardContent>
             </Card>
