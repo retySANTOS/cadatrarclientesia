@@ -152,6 +152,7 @@ export default function Campanhas() {
   const [formMensagem, setFormMensagem] = useState('');
   const [formGrupo, setFormGrupo] = useState('');
   const [formJanela, setFormJanela] = useState(7);
+  const [formCupom, setFormCupom] = useState('');
   const [gruposProdutos, setGruposProdutos] = useState<GrupoProduto[]>([]);
   const [saving, setSaving] = useState(false);
   const [previewCount, setPreviewCount] = useState<number | null>(null);
