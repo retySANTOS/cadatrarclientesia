@@ -882,6 +882,17 @@ export default function Campanhas() {
                   <p className="text-xs text-slate-400">Período após envio para contabilizar conversões.</p>
                 </div>
 
+                {/* Código do cupom */}
+                <div className="space-y-2">
+                  <Label>Código do cupom</Label>
+                  <Input
+                    placeholder="Ex: FEIJUCA, VOLTANDO"
+                    value={formCupom}
+                    onChange={e => setFormCupom(e.target.value)}
+                  />
+                  <p className="text-xs text-slate-400">Opcional. Se preenchido, conversões são rastreadas pelo uso do cupom (mais preciso que janela de tempo).</p>
+                </div>
+
                 {/* Mensagem */}
                 <div className="space-y-2">
                   <Label>Mensagem</Label>
