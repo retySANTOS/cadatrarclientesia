@@ -919,6 +919,11 @@ export default function Campanhas() {
                         📎 Filtro: clientes que compraram {gruposProdutos.find(g => g.id === formGrupo)?.nome ?? formGrupo}
                       </p>
                     )}
+                    {formCupom.trim() && (
+                      <p className="text-xs text-blue-500 mt-1">
+                        🎟️ Cupom: {formCupom.toUpperCase()} — conversões rastreadas por uso
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
