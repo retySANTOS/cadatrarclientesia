@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Users, BarChart3, LogOut, ChevronDown, FileText, Megaphone, PackageSearch, Package, ShoppingBag } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, BarChart3, LogOut, ChevronDown, FileText, Megaphone, PackageSearch, Package, ShoppingBag, UserCheck, Eye, AlertTriangle, Star, BarChart } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,6 +22,13 @@ const mainItems = [
   { title: 'Organizações', url: '/organizacoes', icon: Building2 },
   { title: 'Equipe', url: '/equipe', icon: Users },
   { title: 'Campanhas', url: '/campanhas', icon: Megaphone },
+];
+
+const clienteItems = [
+  { title: 'Visão geral', url: '/clientes/visao-geral', icon: Eye },
+  { title: 'Em risco de sumir', url: '/clientes/em-risco', icon: AlertTriangle },
+  { title: 'Top clientes', url: '/clientes/top', icon: Star },
+  { title: 'Análise avançada', url: '/clientes/analise-avancada', icon: BarChart },
 ];
 
 const reportItems = [
