@@ -111,6 +111,7 @@ function taxa(enviados: number | null, responderam: number | null) {
 
 export default function Campanhas() {
   const { user } = useAuth();
+  const location = useLocation();
 
   /* orgs */
   const [orgs, setOrgs] = useState<Organizacao[]>([]);
