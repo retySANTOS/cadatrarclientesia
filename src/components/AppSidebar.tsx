@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Users, BarChart3, LogOut, ChevronDown, FileText, Megaphone, PackageSearch, Package, ShoppingBag } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, BarChart3, LogOut, ChevronDown, FileText, Megaphone, PackageSearch, Package, ShoppingBag, UserCheck, Eye, AlertTriangle, Star, BarChart } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,6 +24,13 @@ const mainItems = [
   { title: 'Campanhas', url: '/campanhas', icon: Megaphone },
 ];
 
+const clienteItems = [
+  { title: 'Visão geral', url: '/clientes/visao-geral', icon: Eye },
+  { title: 'Em risco de sumir', url: '/clientes/em-risco', icon: AlertTriangle },
+  { title: 'Top clientes', url: '/clientes/top', icon: Star },
+  { title: 'Análise avançada', url: '/clientes/analise-avancada', icon: BarChart },
+];
+
 const reportItems = [
   { title: 'Consumo IA', url: '/relatorios', icon: FileText },
   { title: 'Consumo Detalhado', url: '/consumo-detalhado', icon: FileText },
@@ -43,8 +50,10 @@ export function AppSidebar() {
   const { signOut, user } = useAuth();
   const isReportActive = reportItems.some(i => location.pathname === i.url);
   const isProductActive = productItems.some(i => location.pathname === i.url);
+  const isClienteActive = clienteItems.some(i => location.pathname === i.url);
   const [reportsOpen, setReportsOpen] = useState(isReportActive);
   const [productsOpen, setProductsOpen] = useState(isProductActive);
+  const [clientesOpen, setClientesOpen] = useState(isClienteActive);
 
   return (
     <Sidebar collapsible="icon" className="border-r border-slate-200 bg-slate-50 [&[data-state]]:bg-slate-50">
@@ -71,6 +80,47 @@ export function AppSidebar() {
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
+        </SidebarGroup>
+
+        {/* Clientes submenu */}
+        <SidebarGroup>
+          <Collapsible open={clientesOpen} onOpenChange={setClientesOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-blue-50 hover:text-blue-700 ${
+                  isClienteActive ? 'text-blue-700 font-medium' : 'text-slate-600'
+                }`}
+              >
+                <UserCheck className="h-4 w-4 shrink-0" />
+                {!collapsed && (
+                  <>
+                    <span className="flex-1 text-left">Clientes</span>
+                    <ChevronDown className={`h-3 w-3 transition-transform ${clientesOpen ? 'rotate-180' : ''}`} />
+                  </>
+                )}
+              </button>
+            </CollapsibleTrigger>
+            {!collapsed && (
+              <CollapsibleContent>
+                <SidebarMenu className="ml-4 mt-1 border-l border-slate-200 pl-2">
+                  {clienteItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild>
+                        <NavLink
+                          to={item.url}
+                          className="flex items-center gap-3 rounded-md px-3 py-1.5 text-sm text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-700"
+                          activeClassName="bg-blue-50 text-blue-700 font-medium"
+                        >
+                          <item.icon className="h-3.5 w-3.5 shrink-0" />
+                          <span>{item.title}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </CollapsibleContent>
+            )}
+          </Collapsible>
         </SidebarGroup>
 
         {/* Produtos submenu */}

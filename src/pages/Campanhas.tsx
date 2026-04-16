@@ -36,6 +36,7 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useLocation } from 'react-router-dom';
 
 /* ── types ── */
 
@@ -110,6 +111,7 @@ function taxa(enviados: number | null, responderam: number | null) {
 
 export default function Campanhas() {
   const { user } = useAuth();
+  const location = useLocation();
 
   /* orgs */
   const [orgs, setOrgs] = useState<Organizacao[]>([]);
@@ -217,6 +219,7 @@ export default function Campanhas() {
       .then(({ data }) => setGruposProdutos((data as GrupoProduto[]) ?? []));
   }, [formOrgId, selectedOrg]);
 
+
   /* ── derived ── */
 
   const filteredOrgs = useMemo(
@@ -283,6 +286,17 @@ export default function Campanhas() {
     setPreviewCount(null);
     setEditingCampanha(null);
   };
+
+  /* auto-open from clientes_em_risco */
+  useEffect(() => {
+    if (location.state?.origem === 'clientes_em_risco') {
+      resetForm();
+      setFormPublico('inativos_30a90');
+      setDialogOpen(true);
+      toast.success('Público pré-selecionado: clientes em risco de sumir');
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const openEdit = (c: Campanha) => {
     setEditingCampanha(c);
