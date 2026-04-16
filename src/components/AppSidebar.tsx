@@ -50,8 +50,10 @@ export function AppSidebar() {
   const { signOut, user } = useAuth();
   const isReportActive = reportItems.some(i => location.pathname === i.url);
   const isProductActive = productItems.some(i => location.pathname === i.url);
+  const isClienteActive = clienteItems.some(i => location.pathname === i.url);
   const [reportsOpen, setReportsOpen] = useState(isReportActive);
   const [productsOpen, setProductsOpen] = useState(isProductActive);
+  const [clientesOpen, setClientesOpen] = useState(isClienteActive);
 
   return (
     <Sidebar collapsible="icon" className="border-r border-slate-200 bg-slate-50 [&[data-state]]:bg-slate-50">
