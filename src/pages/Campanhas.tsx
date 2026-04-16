@@ -287,7 +287,17 @@ export default function Campanhas() {
     setEditingCampanha(null);
   };
 
-  const openEdit = (c: Campanha) => {
+  /* auto-open from clientes_em_risco */
+  useEffect(() => {
+    if (location.state?.origem === 'clientes_em_risco') {
+      resetForm();
+      setFormPublico('inativos_30a90');
+      setDialogOpen(true);
+      toast.success('Público pré-selecionado: clientes em risco de sumir');
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
     setEditingCampanha(c);
     setFormOrgId(c.organizacao_id);
     setFormNome(c.nome);
