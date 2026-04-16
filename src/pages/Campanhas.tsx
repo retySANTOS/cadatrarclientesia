@@ -219,6 +219,17 @@ export default function Campanhas() {
       .then(({ data }) => setGruposProdutos((data as GrupoProduto[]) ?? []));
   }, [formOrgId, selectedOrg]);
 
+  /* auto-open from clientes_em_risco */
+  useEffect(() => {
+    if (location.state?.origem === 'clientes_em_risco') {
+      resetForm();
+      setFormPublico('inativos_30a90');
+      setDialogOpen(true);
+      toast.success('Público pré-selecionado: clientes em risco de sumir');
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   /* ── derived ── */
 
   const filteredOrgs = useMemo(
