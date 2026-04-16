@@ -16,6 +16,10 @@ import Campanhas from "./pages/Campanhas";
 import GruposProdutos from "./pages/GruposProdutos";
 import RelatorioProdutos from "./pages/RelatorioProdutos";
 import DashboardPedidos from "./pages/DashboardPedidos";
+import ClientesVisaoGeral from "./pages/ClientesVisaoGeral";
+import ClientesEmRisco from "./pages/ClientesEmRisco";
+import ClientesTop from "./pages/ClientesTop";
+import ClientesAnaliseAvancada from "./pages/ClientesAnaliseAvancada";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +44,10 @@ const App = () => (
             <Route path="/produtos/grupos-produtos" element={<ProtectedRoute><GruposProdutos /></ProtectedRoute>} />
             <Route path="/produtos/relatorio-produtos" element={<ProtectedRoute><RelatorioProdutos /></ProtectedRoute>} />
             <Route path="/produtos/dashboard-pedidos" element={<ProtectedRoute><DashboardPedidos /></ProtectedRoute>} />
+            <Route path="/clientes/visao-geral" element={<ProtectedRoute><ClientesVisaoGeral /></ProtectedRoute>} />
+            <Route path="/clientes/em-risco" element={<ProtectedRoute><ClientesEmRisco /></ProtectedRoute>} />
+            <Route path="/clientes/top" element={<ProtectedRoute><ClientesTop /></ProtectedRoute>} />
+            <Route path="/clientes/analise-avancada" element={<ProtectedRoute><ClientesAnaliseAvancada /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
