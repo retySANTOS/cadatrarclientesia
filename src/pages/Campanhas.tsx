@@ -36,6 +36,7 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useLocation } from 'react-router-dom';
 
 /* ── types ── */
 
