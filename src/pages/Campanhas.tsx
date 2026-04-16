@@ -298,6 +298,7 @@ export default function Campanhas() {
     }
   }, [location.state]);
 
+  const openEdit = (c: Campanha) => {
     setEditingCampanha(c);
     setFormOrgId(c.organizacao_id);
     setFormNome(c.nome);
