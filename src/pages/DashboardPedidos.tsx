@@ -126,13 +126,18 @@ export default function DashboardPedidos() {
     const { start, end } = getDateRange(periodo);
     setLoading(true);
 
-    const fetchPedidos = supabase
+    let pedidosQuery = supabase
       .from('dashboard_pedidos')
       .select('*')
       .eq('organizacao_id', selectedOrg.id)
       .gte('created_at', start)
       .lte('created_at', end)
       .order('created_at', { ascending: false });
+
+    if (filtroCliente) {
+      pedidosQuery = pedidosQuery.eq('whatsapp', filtroCliente);
+    }
+    const fetchPedidos = pedidosQuery;
 
     const startDate = start.split('T')[0];
     const endDate = end.split('T')[0];
