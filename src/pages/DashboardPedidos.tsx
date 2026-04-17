@@ -18,6 +18,9 @@ import { format, subDays, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocation } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface Organizacao { id: string; nome: string; }
 
@@ -25,6 +28,7 @@ interface Pedido {
   id: string;
   organizacao_id: string;
   nome_cliente: string;
+  whatsapp: string;
   valor_total: number;
   status: string;
   created_at: string;
@@ -84,6 +88,21 @@ export default function DashboardPedidos() {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [topProdutos, setTopProdutos] = useState<TopProduto[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Filtro de cliente vindo de outra página (ex: Top clientes)
+  const location = useLocation();
+  const [filtroCliente, setFiltroCliente] = useState('');
+  const [filtroNome, setFiltroNome] = useState('');
+
+  useEffect(() => {
+    const st = location.state as { filtroWhatsapp?: string; filtroNome?: string } | null;
+    if (st?.filtroWhatsapp) {
+      setFiltroCliente(st.filtroWhatsapp);
+      setFiltroNome(st.filtroNome || '');
+      toast.success('Filtrando pedidos de: ' + (st.filtroNome || st.filtroWhatsapp));
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Load orgs
   useEffect(() => {
