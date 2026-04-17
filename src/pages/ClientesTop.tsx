@@ -11,9 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Search } from 'lucide-react';
+import { Search, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Organizacao {
   id: string;
@@ -48,6 +50,7 @@ export default function ClientesTop() {
 
   const [clientes, setClientes] = useState<TopCliente[]>([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const filteredOrgs = useMemo(
     () => orgSearch.length > 0 ? orgs.filter(o => o.nome?.toLowerCase().includes(orgSearch.toLowerCase())) : orgs,
@@ -179,6 +182,7 @@ export default function ClientesTop() {
                         <TableHead className="text-center">Pedidos</TableHead>
                         <TableHead className="text-right">Total gasto</TableHead>
                         <TableHead className="text-right">Ticket médio</TableHead>
+                        <TableHead className="w-12"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -202,6 +206,23 @@ export default function ClientesTop() {
                           </TableCell>
                           <TableCell className="text-right text-slate-600">
                             R$ {Number(c.ticket_medio ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </TableCell>
+                          <TableCell>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-slate-400 hover:text-blue-600"
+                                  onClick={() => navigate('/produtos/dashboard-pedidos', {
+                                    state: { filtroWhatsapp: c.whatsapp, filtroNome: c.nome_cliente },
+                                  })}
+                                >
+                                  <ClipboardList className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Ver pedidos</TooltipContent>
+                            </Tooltip>
                           </TableCell>
                         </TableRow>
                       ))}
