@@ -57,6 +57,7 @@ export interface Organizacao {
   endereco_completo: string;
   ativado: boolean;
   mensagem_boas_vindas: string;
+  dias_cliente_em_risco: number;
   modulos: ModulosConfig;
   created_by?: string;
 }
@@ -162,6 +163,7 @@ const emptyOrg: Organizacao = {
   prompt: DEFAULT_PROMPT, evo_instancia: '', evo_apikey: '', evo_base_url: '', link_cardapio: '', url_cardapio_jina: '', webhook_url: '',
   logo_url: '', cidade_estado: '', endereco_completo: '',
   ativado: true, mensagem_boas_vindas: '',
+  dias_cliente_em_risco: 25,
   modulos: { ...DEFAULT_MODULOS },
 };
 
@@ -194,7 +196,11 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
 
   useEffect(() => {
     if (organizacao) {
-      setForm({ ...organizacao, modulos: { ...DEFAULT_MODULOS, ...organizacao.modulos } });
+      setForm({
+        ...organizacao,
+        dias_cliente_em_risco: organizacao.dias_cliente_em_risco ?? 25,
+        modulos: { ...DEFAULT_MODULOS, ...organizacao.modulos },
+      });
       if (organizacao.id) reloadTemplates(organizacao.id);
     } else {
       setForm(emptyOrg);
@@ -511,6 +517,26 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
             <div className="space-y-2">
               <Label>Mensagem de Boas-vindas</Label>
               <Textarea value={form.mensagem_boas_vindas} onChange={(e) => update('mensagem_boas_vindas', e.target.value)} rows={3} />
+            </div>
+            <div className="space-y-2 pt-2 border-t">
+              <Label>Considerar cliente em risco após</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={7}
+                  max={90}
+                  value={form.dias_cliente_em_risco ?? 25}
+                  onChange={(e) => setForm(prev => ({
+                    ...prev,
+                    dias_cliente_em_risco: Math.max(7, Math.min(90, Number(e.target.value) || 25)),
+                  }))}
+                  className="w-32"
+                />
+                <span className="text-sm text-muted-foreground">dias sem comprar</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Marmitarias: 7-15 dias. Pizzarias: 15-25 dias. Comida japonesa: 30-45 dias.
+              </p>
             </div>
           </TabsContent>
 
