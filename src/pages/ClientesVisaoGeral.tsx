@@ -39,6 +39,15 @@ interface ClienteEmRisco {
   ultima_compra: string;
 }
 
+interface TopCliente {
+  posicao: number;
+  whatsapp: string;
+  nome_cliente: string;
+  total_pedidos: number;
+  total_gasto: number;
+  ticket_medio: number;
+}
+
 export default function ClientesVisaoGeral() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -55,6 +64,8 @@ export default function ClientesVisaoGeral() {
   const [loadingKpis, setLoadingKpis] = useState(false);
   const [clientesRisco, setClientesRisco] = useState<ClienteEmRisco[]>([]);
   const [loadingRisco, setLoadingRisco] = useState(false);
+  const [topClientes, setTopClientes] = useState<TopCliente[]>([]);
+  const [loadingTop, setLoadingTop] = useState(false);
 
   const filteredOrgs = useMemo(
     () => orgSearch.length > 0 ? orgs.filter(o => o.nome?.toLowerCase().includes(orgSearch.toLowerCase())) : orgs,
@@ -93,6 +104,17 @@ export default function ClientesVisaoGeral() {
       if (error) { toast.error('Erro ao carregar clientes em risco'); setLoadingRisco(false); return; }
       setClientesRisco((data as ClienteEmRisco[]) ?? []);
       setLoadingRisco(false);
+    });
+
+    setLoadingTop(true);
+    supabase.rpc('buscar_top_clientes', {
+      p_org_id: selectedOrg.id,
+      p_periodo_dias: 90,
+      p_limite: 5,
+    }).then(({ data, error }) => {
+      if (error) { toast.error('Erro ao carregar top clientes'); setLoadingTop(false); return; }
+      setTopClientes((data as TopCliente[]) ?? []);
+      setLoadingTop(false);
     });
   }, [selectedOrg]);
 
@@ -265,10 +287,46 @@ export default function ClientesVisaoGeral() {
                 </CardContent>
               </Card>
 
-              {/* BLOCO 3 - Placeholder */}
+              {/* BLOCO 3 - Top clientes */}
               <Card>
-                <CardContent className="py-12 text-center text-slate-400">
-                  Top clientes em breve
+                <CardContent className="pt-6">
+                  <h2 className="text-lg font-semibold text-slate-800">Quem são seus clientes mais valiosos?</h2>
+                  <p className="text-sm text-slate-400 mb-4">Top 5 que mais gastaram nos últimos 90 dias.</p>
+
+                  {loadingTop ? (
+                    <div className="space-y-3">
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
+                    </div>
+                  ) : topClientes.length === 0 ? (
+                    <p className="text-center text-slate-400 py-8">Sem dados de clientes ainda</p>
+                  ) : (
+                    <>
+                      <div className="divide-y divide-slate-100">
+                        {topClientes.map((c, i) => (
+                          <div key={i} className="flex items-center gap-3 py-3">
+                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-medium shrink-0">
+                              {c.posicao}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-slate-700 truncate">{c.nome_cliente || c.whatsapp}</p>
+                              <p className="text-xs text-slate-400">{c.total_pedidos} pedidos</p>
+                            </div>
+                            <span className="text-sm font-medium text-slate-700">
+                              R$ {Number(c.total_gasto ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        className="mt-3 text-sm text-blue-600 hover:underline"
+                        onClick={() => navigate('/clientes/top')}
+                      >
+                        Ver top 10 completo →
+                      </button>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </div>
