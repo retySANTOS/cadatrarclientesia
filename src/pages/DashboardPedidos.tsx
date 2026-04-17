@@ -18,6 +18,9 @@ import { format, subDays, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocation } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface Organizacao { id: string; nome: string; }
 
@@ -25,6 +28,7 @@ interface Pedido {
   id: string;
   organizacao_id: string;
   nome_cliente: string;
+  whatsapp: string;
   valor_total: number;
   status: string;
   created_at: string;
@@ -85,6 +89,21 @@ export default function DashboardPedidos() {
   const [topProdutos, setTopProdutos] = useState<TopProduto[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Filtro de cliente vindo de outra página (ex: Top clientes)
+  const location = useLocation();
+  const [filtroCliente, setFiltroCliente] = useState('');
+  const [filtroNome, setFiltroNome] = useState('');
+
+  useEffect(() => {
+    const st = location.state as { filtroWhatsapp?: string; filtroNome?: string } | null;
+    if (st?.filtroWhatsapp) {
+      setFiltroCliente(st.filtroWhatsapp);
+      setFiltroNome(st.filtroNome || '');
+      toast.success('Filtrando pedidos de: ' + (st.filtroNome || st.filtroWhatsapp));
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   // Load orgs
   useEffect(() => {
     supabase.from('organizacao').select('id, nome').order('nome').then(({ data }) => {
@@ -107,13 +126,18 @@ export default function DashboardPedidos() {
     const { start, end } = getDateRange(periodo);
     setLoading(true);
 
-    const fetchPedidos = supabase
+    let pedidosQuery = supabase
       .from('dashboard_pedidos')
       .select('*')
       .eq('organizacao_id', selectedOrg.id)
       .gte('created_at', start)
       .lte('created_at', end)
       .order('created_at', { ascending: false });
+
+    if (filtroCliente) {
+      pedidosQuery = pedidosQuery.eq('whatsapp', filtroCliente);
+    }
+    const fetchPedidos = pedidosQuery;
 
     const startDate = start.split('T')[0];
     const endDate = end.split('T')[0];
@@ -141,7 +165,7 @@ export default function DashboardPedidos() {
       setTopProdutos(agrupado);
       setLoading(false);
     });
-  }, [selectedOrg, periodo]);
+  }, [selectedOrg, periodo, filtroCliente]);
 
   // Metrics — only delivered orders count for revenue
   const pedidosEntregues = pedidos.filter(p => p.status === STATUS_ENTREGUE);
@@ -246,6 +270,21 @@ export default function DashboardPedidos() {
           </div>
         ) : (
           <>
+            {filtroCliente && (
+              <div className="flex items-center gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <span className="text-sm text-blue-700">
+                  Filtrando pedidos de: <strong>{filtroNome || filtroCliente}</strong>
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-blue-600 hover:text-blue-800 text-xs"
+                  onClick={() => { setFiltroCliente(''); setFiltroNome(''); }}
+                >
+                  Limpar filtro
+                </Button>
+              </div>
+            )}
             {/* Period pills */}
             <div className="flex gap-2">
               {PERIODOS.map(p => (
