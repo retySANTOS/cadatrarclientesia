@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 
 interface Organizacao {
   id: string;
@@ -30,7 +31,21 @@ interface TopCliente {
   total_pedidos: number;
   total_gasto: number;
   ticket_medio: number;
+  status_rfv?: string;
+  score_rfv?: number;
+  ultima_compra?: string | null;
 }
+
+const statusBadgeClass = (status?: string) => {
+  switch (status) {
+    case 'Campeão': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    case 'Fiel': return 'bg-green-100 text-green-800 border-green-200';
+    case 'Promissor': return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'Em risco': return 'bg-amber-100 text-amber-800 border-amber-200';
+    case 'Perdido': return 'bg-red-100 text-red-800 border-red-200';
+    default: return 'bg-slate-100 text-slate-700 border-slate-200';
+  }
+};
 
 const posicaoColor = (pos: number) => {
   if (pos === 1) return 'bg-amber-100 text-amber-700';
@@ -73,13 +88,19 @@ export default function ClientesTop() {
   useEffect(() => {
     if (!selectedOrg) return;
     setLoading(true);
-    supabase.rpc('buscar_top_clientes', {
+    supabase.rpc('calcular_rfv_clientes', {
       p_org_id: selectedOrg.id,
-      p_periodo_dias: periodo,
-      p_limite: limite,
     }).then(({ data, error }) => {
       if (error) { toast.error('Erro ao carregar top clientes'); setLoading(false); return; }
-      setClientes((data as TopCliente[]) ?? []);
+      const all = (data as any[]) ?? [];
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - periodo);
+      const filtered = all
+        .filter(c => c.ultima_compra && new Date(c.ultima_compra) >= cutoff)
+        .sort((a, b) => Number(b.total_gasto ?? 0) - Number(a.total_gasto ?? 0))
+        .slice(0, limite)
+        .map((c, i) => ({ ...c, posicao: i + 1 } as TopCliente));
+      setClientes(filtered);
       setLoading(false);
     });
   }, [selectedOrg, periodo, limite]);
@@ -178,6 +199,7 @@ export default function ClientesTop() {
                       <TableRow>
                         <TableHead className="w-20">Posição</TableHead>
                         <TableHead>Nome</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead>WhatsApp</TableHead>
                         <TableHead className="text-center">Pedidos</TableHead>
                         <TableHead className="text-right">Total gasto</TableHead>
@@ -197,6 +219,13 @@ export default function ClientesTop() {
                             </div>
                           </TableCell>
                           <TableCell className="font-medium text-slate-800">{c.nome_cliente || '—'}</TableCell>
+                          <TableCell>
+                            {c.status_rfv ? (
+                              <Badge variant="outline" className={cn('font-normal', statusBadgeClass(c.status_rfv))}>
+                                {c.status_rfv}
+                              </Badge>
+                            ) : '—'}
+                          </TableCell>
                           <TableCell className="text-slate-500 text-sm">
                             {c.whatsapp?.replace(/(\d{2})(\d{2})(\d{5})(\d{4})/, '+$1 ($2) $3-$4') || '—'}
                           </TableCell>
