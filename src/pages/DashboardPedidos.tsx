@@ -113,6 +113,7 @@ export default function DashboardPedidos() {
   const location = useLocation();
   const [filtroCliente, setFiltroCliente] = useState('');
   const [filtroNome, setFiltroNome] = useState('');
+  const [pedidoSelecionado, setPedidoSelecionado] = useState<Pedido | null>(null);
 
   useEffect(() => {
     const st = location.state as { filtroWhatsapp?: string; filtroNome?: string } | null;
