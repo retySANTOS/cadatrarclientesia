@@ -34,12 +34,31 @@ interface Pedido {
   status: string;
   created_at: string;
   taxa_entrega: number;
+  itens: string | null;
+  valor_subtotal: number;
+  endereco_entrega: string;
+  forma_pagamento: string;
+  cupom_utilizado: string | null;
+}
+
+interface ItemPedido {
+  nome: string;
+  quantidade: number;
+  valor_unitario: number;
 }
 
 interface TopProduto {
   nome_produto: string;
   total_quantidade: number;
   total_receita: number;
+}
+
+function parseItens(itensStr: string | null): ItemPedido[] {
+  if (!itensStr) return [];
+  try {
+    const parsed = JSON.parse(itensStr);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch { return []; }
 }
 
 const PERIODOS = [
