@@ -130,10 +130,11 @@ export default function DashboardPedidos() {
       .from('dashboard_pedidos')
       .select('*')
       .eq('organizacao_id', selectedOrg.id)
-      .gte('created_at', start)
-      .lte('created_at', end)
       .order('created_at', { ascending: false });
 
+    if (!filtroCliente) {
+      pedidosQuery = pedidosQuery.gte('created_at', start).lte('created_at', end);
+    }
     if (filtroCliente) {
       pedidosQuery = pedidosQuery.eq('whatsapp', filtroCliente);
     }
@@ -141,13 +142,19 @@ export default function DashboardPedidos() {
 
     const startDate = start.split('T')[0];
     const endDate = end.split('T')[0];
-    const fetchTop = supabase
+    let topQuery = supabase
       .from('relatorio_produtos')
-      .select('nome_produto, total_quantidade, total_receita')
+      .select('nome_produto, total_quantidade, total_receita, whatsapp')
       .eq('organizacao_id', selectedOrg.id)
-      .gte('data_pedido', startDate)
-      .lte('data_pedido', endDate)
       .order('total_quantidade', { ascending: false });
+
+    if (!filtroCliente) {
+      topQuery = topQuery.gte('data_pedido', startDate).lte('data_pedido', endDate);
+    }
+    if (filtroCliente) {
+      topQuery = topQuery.eq('whatsapp', filtroCliente);
+    }
+    const fetchTop = topQuery;
 
     Promise.all([fetchPedidos, fetchTop]).then(([resPedidos, resTop]) => {
       setPedidos((resPedidos.data as Pedido[]) ?? []);
@@ -271,14 +278,14 @@ export default function DashboardPedidos() {
         ) : (
           <>
             {filtroCliente && (
-              <div className="flex items-center gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200 mb-4">
                 <span className="text-sm text-blue-700">
-                  Filtrando pedidos de: <strong>{filtroNome || filtroCliente}</strong>
+                  Mostrando todos os pedidos de: <strong>{filtroNome || filtroCliente}</strong>
                 </span>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 text-blue-600 hover:text-blue-800 text-xs"
+                  className="text-blue-600 hover:text-blue-800 text-xs"
                   onClick={() => { setFiltroCliente(''); setFiltroNome(''); }}
                 >
                   Limpar filtro
