@@ -494,7 +494,11 @@ export default function DashboardPedidos() {
                           <TableCell colSpan={4} className="text-center text-slate-400 py-8">Sem pedidos</TableCell>
                         </TableRow>
                       ) : ultimos10.map(p => (
-                        <TableRow key={p.id}>
+                        <TableRow
+                          key={p.id}
+                          onClick={() => setPedidoSelecionado(p)}
+                          className="cursor-pointer hover:bg-slate-50 transition-colors"
+                        >
                           <TableCell className="font-medium text-slate-800">{p.nome_cliente || 'Cliente'}</TableCell>
                           <TableCell className="text-right font-medium text-emerald-600">
                             R$ {Number(p.valor_total ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
