@@ -278,14 +278,14 @@ export default function DashboardPedidos() {
         ) : (
           <>
             {filtroCliente && (
-              <div className="flex items-center gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200 mb-4">
                 <span className="text-sm text-blue-700">
-                  Filtrando pedidos de: <strong>{filtroNome || filtroCliente}</strong>
+                  Mostrando todos os pedidos de: <strong>{filtroNome || filtroCliente}</strong>
                 </span>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 text-blue-600 hover:text-blue-800 text-xs"
+                  className="text-blue-600 hover:text-blue-800 text-xs"
                   onClick={() => { setFiltroCliente(''); setFiltroNome(''); }}
                 >
                   Limpar filtro
