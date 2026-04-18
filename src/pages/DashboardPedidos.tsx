@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from 'recharts';
 import { Search, ShoppingCart, DollarSign, TrendingUp, Truck, Banknote } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { format, subDays, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -33,12 +34,31 @@ interface Pedido {
   status: string;
   created_at: string;
   taxa_entrega: number;
+  itens: string | null;
+  valor_subtotal: number;
+  endereco_entrega: string;
+  forma_pagamento: string;
+  cupom_utilizado: string | null;
+}
+
+interface ItemPedido {
+  nome: string;
+  quantidade: number;
+  valor_unitario: number;
 }
 
 interface TopProduto {
   nome_produto: string;
   total_quantidade: number;
   total_receita: number;
+}
+
+function parseItens(itensStr: string | null): ItemPedido[] {
+  if (!itensStr) return [];
+  try {
+    const parsed = JSON.parse(itensStr);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch { return []; }
 }
 
 const PERIODOS = [
@@ -93,6 +113,7 @@ export default function DashboardPedidos() {
   const location = useLocation();
   const [filtroCliente, setFiltroCliente] = useState('');
   const [filtroNome, setFiltroNome] = useState('');
+  const [pedidoSelecionado, setPedidoSelecionado] = useState<Pedido | null>(null);
 
   useEffect(() => {
     const st = location.state as { filtroWhatsapp?: string; filtroNome?: string } | null;
@@ -473,7 +494,11 @@ export default function DashboardPedidos() {
                           <TableCell colSpan={4} className="text-center text-slate-400 py-8">Sem pedidos</TableCell>
                         </TableRow>
                       ) : ultimos10.map(p => (
-                        <TableRow key={p.id}>
+                        <TableRow
+                          key={p.id}
+                          onClick={() => setPedidoSelecionado(p)}
+                          className="cursor-pointer hover:bg-slate-50 transition-colors"
+                        >
                           <TableCell className="font-medium text-slate-800">{p.nome_cliente || 'Cliente'}</TableCell>
                           <TableCell className="text-right font-medium text-emerald-600">
                             R$ {Number(p.valor_total ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -496,6 +521,114 @@ export default function DashboardPedidos() {
           </>
         )}
       </div>
+
+      {/* Dialog de detalhes do pedido */}
+      <Dialog open={!!pedidoSelecionado} onOpenChange={(v) => { if (!v) setPedidoSelecionado(null); }}>
+        <DialogContent className="max-w-lg w-full h-full sm:h-auto sm:max-h-[90vh] overflow-y-auto p-0 sm:rounded-lg rounded-none">
+          {pedidoSelecionado && (() => {
+            const itens = parseItens(pedidoSelecionado.itens);
+            return (
+              <>
+                {/* Header com status */}
+                <div className="p-5 border-b border-slate-100">
+                  <div className="flex items-start justify-between gap-3">
+                    <DialogHeader className="text-left space-y-1">
+                      <DialogTitle className="text-base text-slate-800">
+                        Pedido de {pedidoSelecionado.nome_cliente || 'Cliente'}
+                      </DialogTitle>
+                      <DialogDescription className="text-xs text-slate-500">
+                        {format(new Date(pedidoSelecionado.created_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Badge className={cn('text-xs border shrink-0', statusBadge(pedidoSelecionado.status))}>
+                      {pedidoSelecionado.status === 'Seu pedido já foi entregue' ? 'Entregue'
+                        : pedidoSelecionado.status === 'Seu pedido saiu para entrega' ? 'Em entrega'
+                        : pedidoSelecionado.status === 'Seu pedido está sendo preparado' ? 'Preparando'
+                        : pedidoSelecionado.status === 'Pedido aguardando confirmação' ? 'Aguardando'
+                        : pedidoSelecionado.status}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Itens do pedido */}
+                <div className="p-5 border-b border-slate-100">
+                  <h4 className="text-sm font-semibold text-slate-700 mb-3">Itens do pedido</h4>
+                  {itens.length === 0 ? (
+                    <p className="text-sm text-slate-400">Sem detalhes dos itens</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {itens.map((item, i) => (
+                        <div key={i} className="flex items-start justify-between gap-3 text-sm">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-slate-800 break-words">{item.nome}</p>
+                            <p className="text-xs text-slate-500">
+                              {item.quantidade}x R$ {Number(item.valor_unitario).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </p>
+                          </div>
+                          <p className="font-medium text-slate-700 shrink-0">
+                            R$ {(item.quantidade * item.valor_unitario).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Valores */}
+                <div className="p-5 border-b border-slate-100">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between text-slate-600">
+                      <span>Subtotal</span>
+                      <span>R$ {Number(pedidoSelecionado.valor_subtotal ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-600">
+                      <span>Taxa de entrega</span>
+                      <span>R$ {Number(pedidoSelecionado.taxa_entrega ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    {pedidoSelecionado.cupom_utilizado && (
+                      <div className="flex justify-between text-slate-600">
+                        <span>Cupom</span>
+                        <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-xs">{pedidoSelecionado.cupom_utilizado}</Badge>
+                      </div>
+                    )}
+                    <div className="flex justify-between pt-2 border-t border-slate-100 text-base font-semibold text-slate-800">
+                      <span>Total</span>
+                      <span className="text-emerald-600">R$ {Number(pedidoSelecionado.valor_total ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info de entrega e pagamento */}
+                <div className="p-5 space-y-4">
+                  {pedidoSelecionado.forma_pagamento && (
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Pagamento</h4>
+                      <p className="text-sm text-slate-700">{pedidoSelecionado.forma_pagamento}</p>
+                    </div>
+                  )}
+                  {pedidoSelecionado.endereco_entrega && (
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Endereço de entrega</h4>
+                      <p className="text-sm text-slate-700 whitespace-pre-line">{pedidoSelecionado.endereco_entrega}</p>
+                    </div>
+                  )}
+                  <div>
+                    <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">WhatsApp</h4>
+                    <p className="text-sm text-slate-700">{pedidoSelecionado.whatsapp}</p>
+                  </div>
+                </div>
+
+                {/* Botão fechar */}
+                <div className="p-5 pt-0 sm:hidden">
+                  <Button variant="outline" className="w-full" onClick={() => setPedidoSelecionado(null)}>
+                    Voltar
+                  </Button>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
