@@ -17,6 +17,7 @@ import GruposProdutos from "./pages/GruposProdutos";
 import RelatorioProdutos from "./pages/RelatorioProdutos";
 import DashboardPedidos from "./pages/DashboardPedidos";
 import ClientesVisaoGeral from "./pages/ClientesVisaoGeral";
+import ClientesRelatorioGeral from "./pages/ClientesRelatorioGeral";
 import ClientesEmRisco from "./pages/ClientesEmRisco";
 import ClientesTop from "./pages/ClientesTop";
 import ClientesAnaliseAvancada from "./pages/ClientesAnaliseAvancada";
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/produtos/grupos-produtos" element={<ProtectedRoute><GruposProdutos /></ProtectedRoute>} />
             <Route path="/produtos/relatorio-produtos" element={<ProtectedRoute><RelatorioProdutos /></ProtectedRoute>} />
             <Route path="/produtos/dashboard-pedidos" element={<ProtectedRoute><DashboardPedidos /></ProtectedRoute>} />
+            <Route path="/clientes/relatorio-geral" element={<ProtectedRoute><ClientesRelatorioGeral /></ProtectedRoute>} />
             <Route path="/clientes/visao-geral" element={<ProtectedRoute><ClientesVisaoGeral /></ProtectedRoute>} />
             <Route path="/clientes/em-risco" element={<ProtectedRoute><ClientesEmRisco /></ProtectedRoute>} />
             <Route path="/clientes/top" element={<ProtectedRoute><ClientesTop /></ProtectedRoute>} />
