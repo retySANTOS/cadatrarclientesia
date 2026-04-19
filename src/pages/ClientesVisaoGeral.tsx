@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 interface Organizacao {
   id: string;
@@ -376,7 +376,7 @@ export default function ClientesVisaoGeral() {
                                 <Cell key={index} fill={entry.color} />
                               ))}
                             </Pie>
-                            <Tooltip formatter={(value: number, name: string) => [value, name]} />
+                            <RechartsTooltip formatter={(value: number, name: string) => [value, name]} />
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
