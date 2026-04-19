@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 interface Organizacao {
   id: string;
@@ -48,6 +49,10 @@ interface TopCliente {
   ticket_medio: number;
 }
 
+interface RfvCliente {
+  status_rfv: string;
+}
+
 export default function ClientesVisaoGeral() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -66,6 +71,8 @@ export default function ClientesVisaoGeral() {
   const [loadingRisco, setLoadingRisco] = useState(false);
   const [topClientes, setTopClientes] = useState<TopCliente[]>([]);
   const [loadingTop, setLoadingTop] = useState(false);
+  const [rfvData, setRfvData] = useState<{ name: string; value: number; color: string }[]>([]);
+  const [loadingRfv, setLoadingRfv] = useState(false);
 
   const filteredOrgs = useMemo(
     () => orgSearch.length > 0 ? orgs.filter(o => o.nome?.toLowerCase().includes(orgSearch.toLowerCase())) : orgs,
@@ -115,6 +122,26 @@ export default function ClientesVisaoGeral() {
       if (error) { toast.error('Erro ao carregar top clientes'); setLoadingTop(false); return; }
       setTopClientes((data as TopCliente[]) ?? []);
       setLoadingTop(false);
+    });
+
+    setLoadingRfv(true);
+    supabase.rpc('calcular_rfv_clientes', { p_org_id: selectedOrg.id }).then(({ data, error }) => {
+      if (error) { setLoadingRfv(false); return; }
+      const all = (data as RfvCliente[]) ?? [];
+      const colorMap: Record<string, string> = {
+        'Campeão': '#10b981',
+        'Fiel': '#22c55e',
+        'Promissor': '#3b82f6',
+        'Em risco': '#f59e0b',
+        'Perdido': '#ef4444',
+      };
+      const counts: Record<string, number> = {};
+      for (const c of all) {
+        counts[c.status_rfv] = (counts[c.status_rfv] ?? 0) + 1;
+      }
+      const order = ['Campeão', 'Fiel', 'Promissor', 'Em risco', 'Perdido'];
+      setRfvData(order.filter(k => counts[k] > 0).map(k => ({ name: k, value: counts[k], color: colorMap[k] })));
+      setLoadingRfv(false);
     });
   }, [selectedOrg]);
 
@@ -326,6 +353,45 @@ export default function ClientesVisaoGeral() {
                         Ver top 10 completo →
                       </button>
                     </>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* BLOCO 4 - Distribuição RFV */}
+              <Card>
+                <CardContent className="pt-6">
+                  <h2 className="text-lg font-semibold text-slate-800">Como seus clientes estão distribuídos?</h2>
+                  <p className="text-sm text-slate-400 mb-4">Classificação RFV — Recência, Frequência e Valor.</p>
+                  {loadingRfv ? (
+                    <Skeleton className="h-48 w-full" />
+                  ) : rfvData.length === 0 ? (
+                    <p className="text-center text-slate-400 py-8">Sem dados disponíveis</p>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row items-center gap-6">
+                      <div className="w-full sm:w-48 h-48">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie data={rfvData} dataKey="value" cx="50%" cy="50%" innerRadius={50} outerRadius={80}>
+                              {rfvData.map((entry, index) => (
+                                <Cell key={index} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <RechartsTooltip formatter={(value: number, name: string) => [value, name]} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="flex flex-col gap-2 flex-1">
+                        {rfvData.map((item) => (
+                          <div key={item.name} className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2">
+                              <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                              <span className="text-sm text-slate-600">{item.name}</span>
+                            </div>
+                            <span className="text-sm font-medium text-slate-700">{item.value} cliente{item.value !== 1 ? 's' : ''}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </CardContent>
               </Card>
