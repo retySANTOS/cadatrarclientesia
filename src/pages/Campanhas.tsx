@@ -988,6 +988,48 @@ export default function Campanhas() {
                   <p className="text-xs text-slate-400">Opcional. Se preenchido, conversões são rastreadas pelo uso do cupom (mais preciso que janela de tempo).</p>
                 </div>
 
+                {/* Imagem da campanha */}
+                <div className="space-y-2">
+                  <Label>Imagem da campanha</Label>
+                  <div className="rounded-lg border-2 border-dashed border-slate-200 p-4 text-center hover:border-slate-300 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/jpg"
+                      id="campanha-imagem-input"
+                      className="hidden"
+                      onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (file) { setFormImagem(file); handleImagemUpload(file); }
+                      }}
+                    />
+                    <label htmlFor="campanha-imagem-input" className="cursor-pointer block">
+                      {uploadingImagem ? (
+                        <p className="text-sm text-slate-500">Enviando imagem...</p>
+                      ) : formImagemUrl ? (
+                        <p className="text-sm text-emerald-600 font-medium">✅ Imagem carregada</p>
+                      ) : (
+                        <>
+                          <p className="text-sm font-medium text-slate-700">Toque para escolher a imagem</p>
+                          <p className="text-xs text-slate-400 mt-1">JPG ou PNG — aparece antes da mensagem no WhatsApp</p>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                  {formImagemUrl && (
+                    <div className="relative inline-block">
+                      <img src={formImagemUrl} alt="Prévia da campanha" className="max-h-40 rounded-lg border border-slate-200" />
+                      <button
+                        type="button"
+                        onClick={() => { setFormImagemUrl(''); setFormImagem(null); }}
+                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                  <p className="text-xs text-slate-400">Opcional. Se preenchida, a mensagem é enviada como legenda da imagem.</p>
+                </div>
+
                 {/* Mensagem */}
                 <div className="space-y-2">
                   <Label>Mensagem</Label>
