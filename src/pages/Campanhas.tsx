@@ -95,6 +95,11 @@ const PUBLICO_LABELS: Record<string, { title: string; desc: string }> = {
   inativos_30a90: { title: 'Inativos (31–90 dias)', desc: 'Reativação de clientes' },
   dormentes: { title: 'Dormentes (90+ dias)', desc: 'Sumiram há muito tempo' },
   todos: { title: 'Todos os clientes', desc: 'Opt-out sempre respeitado' },
+  campeao:     { title: 'Campeões',    desc: 'Clientes mais valiosos e fiéis' },
+  fiel:        { title: 'Fiéis',       desc: 'Compram com frequência' },
+  promissor:   { title: 'Promissores', desc: 'Bom potencial de crescimento' },
+  em_risco_rfv:{ title: 'Em risco',    desc: 'Estão deixando de comprar' },
+  perdido:     { title: 'Perdidos',    desc: 'Sem compras há muito tempo' },
 };
 
 function filtroLabel(filtro: string | null) {
@@ -833,23 +838,58 @@ export default function Campanhas() {
                 {/* Público */}
                 <div className="space-y-2">
                   <Label>Público-alvo</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {Object.entries(PUBLICO_LABELS).map(([key, { title, desc }]) => (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => setFormPublico(key)}
-                        className={cn(
-                          'rounded-lg border-2 p-3 text-left transition-colors',
-                          formPublico === key
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-slate-200 hover:border-slate-300',
-                        )}
-                      >
-                        <p className="text-sm font-medium text-slate-700">{title}</p>
-                        <p className="text-xs text-slate-400">{desc}</p>
-                      </button>
-                    ))}
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-2">Por comportamento</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {['ativos_30dias','inativos_30a90','dormentes','todos'].map(key => {
+                          const { title, desc } = PUBLICO_LABELS[key];
+                          return (
+                            <button
+                              key={key}
+                              type="button"
+                              onClick={() => setFormPublico(key)}
+                              className={cn(
+                                'rounded-lg border-2 p-3 text-left transition-colors',
+                                formPublico === key ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300',
+                              )}
+                            >
+                              <p className="text-sm font-medium text-slate-700">{title}</p>
+                              <p className="text-xs text-slate-400">{desc}</p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-2">Por perfil RFV</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {['campeao','fiel','promissor','em_risco_rfv','perdido'].map(key => {
+                          const { title, desc } = PUBLICO_LABELS[key];
+                          const rfvColors: Record<string,string> = {
+                            campeao: 'border-emerald-500 bg-emerald-50',
+                            fiel: 'border-green-500 bg-green-50',
+                            promissor: 'border-blue-500 bg-blue-50',
+                            em_risco_rfv: 'border-amber-500 bg-amber-50',
+                            perdido: 'border-red-500 bg-red-50',
+                          };
+                          return (
+                            <button
+                              key={key}
+                              type="button"
+                              onClick={() => setFormPublico(key)}
+                              className={cn(
+                                'rounded-lg border-2 p-3 text-left transition-colors',
+                                formPublico === key ? rfvColors[key] : 'border-slate-200 hover:border-slate-300',
+                              )}
+                            >
+                              <p className="text-sm font-medium text-slate-700">{title}</p>
+                              <p className="text-xs text-slate-400">{desc}</p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
