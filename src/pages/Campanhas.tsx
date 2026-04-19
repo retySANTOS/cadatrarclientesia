@@ -160,6 +160,9 @@ export default function Campanhas() {
   const [formGrupo, setFormGrupo] = useState('');
   const [formJanela, setFormJanela] = useState(7);
   const [formCupom, setFormCupom] = useState('');
+  const [formImagem, setFormImagem] = useState<File | null>(null);
+  const [formImagemUrl, setFormImagemUrl] = useState('');
+  const [uploadingImagem, setUploadingImagem] = useState(false);
   const [gruposProdutos, setGruposProdutos] = useState<GrupoProduto[]>([]);
   const [saving, setSaving] = useState(false);
   const [previewCount, setPreviewCount] = useState<number | null>(null);
@@ -288,6 +291,8 @@ export default function Campanhas() {
     setFormOrgId(''); setFormNome(''); setFormData(undefined);
     setFormHora('18:00'); setFormPublico(''); setFormMensagem('');
     setFormGrupo(''); setFormJanela(7); setFormCupom('');
+    setFormImagem(null);
+    setFormImagemUrl('');
     setPreviewCount(null);
     setEditingCampanha(null);
   };
@@ -312,6 +317,8 @@ export default function Campanhas() {
     setFormGrupo(c.grupo_produto || '');
     setFormJanela(c.janela_conversao || 7);
     setFormCupom(c.cupom || '');
+    setFormImagemUrl((c as any).imagem_url || '');
+    setFormImagem(null);
     if (c.data_disparo) {
       const d = new Date(c.data_disparo);
       setFormData(d);
@@ -347,6 +354,7 @@ export default function Campanhas() {
       grupo_produto: formGrupo && formGrupo !== 'todos' ? formGrupo : null,
       janela_conversao: formJanela,
       cupom: formCupom.trim().toUpperCase() || null,
+      imagem_url: formImagemUrl || null,
     };
 
     let error;
@@ -458,6 +466,27 @@ export default function Campanhas() {
   const orgName = (orgId: string) => orgs.find(o => o.id === orgId)?.nome ?? '';
 
   const previewMsg = formMensagem.replace(/\{nome\}/gi, 'João');
+
+  const handleImagemUpload = async (file: File) => {
+    if (!file) return;
+    setUploadingImagem(true);
+    const ext = file.name.split('.').pop();
+    const fileName = `${Date.now()}.${ext}`;
+    const { error } = await supabase.storage
+      .from('campanhas-imagens')
+      .upload(fileName, file, { upsert: true });
+    if (error) {
+      toast.error('Erro ao fazer upload da imagem');
+      setUploadingImagem(false);
+      return;
+    }
+    const { data: urlData } = supabase.storage
+      .from('campanhas-imagens')
+      .getPublicUrl(fileName);
+    setFormImagemUrl(urlData.publicUrl);
+    setUploadingImagem(false);
+    toast.success('Imagem enviada!');
+  };
 
   /* ── render ── */
 
@@ -957,6 +986,48 @@ export default function Campanhas() {
                     onChange={e => setFormCupom(e.target.value)}
                   />
                   <p className="text-xs text-slate-400">Opcional. Se preenchido, conversões são rastreadas pelo uso do cupom (mais preciso que janela de tempo).</p>
+                </div>
+
+                {/* Imagem da campanha */}
+                <div className="space-y-2">
+                  <Label>Imagem da campanha</Label>
+                  <div className="rounded-lg border-2 border-dashed border-slate-200 p-4 text-center hover:border-slate-300 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/jpg"
+                      id="campanha-imagem-input"
+                      className="hidden"
+                      onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (file) { setFormImagem(file); handleImagemUpload(file); }
+                      }}
+                    />
+                    <label htmlFor="campanha-imagem-input" className="cursor-pointer block">
+                      {uploadingImagem ? (
+                        <p className="text-sm text-slate-500">Enviando imagem...</p>
+                      ) : formImagemUrl ? (
+                        <p className="text-sm text-emerald-600 font-medium">✅ Imagem carregada</p>
+                      ) : (
+                        <>
+                          <p className="text-sm font-medium text-slate-700">Toque para escolher a imagem</p>
+                          <p className="text-xs text-slate-400 mt-1">JPG ou PNG — aparece antes da mensagem no WhatsApp</p>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                  {formImagemUrl && (
+                    <div className="relative inline-block">
+                      <img src={formImagemUrl} alt="Prévia da campanha" className="max-h-40 rounded-lg border border-slate-200" />
+                      <button
+                        type="button"
+                        onClick={() => { setFormImagemUrl(''); setFormImagem(null); }}
+                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                  <p className="text-xs text-slate-400">Opcional. Se preenchida, a mensagem é enviada como legenda da imagem.</p>
                 </div>
 
                 {/* Mensagem */}
