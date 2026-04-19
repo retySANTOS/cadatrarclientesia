@@ -160,6 +160,9 @@ export default function Campanhas() {
   const [formGrupo, setFormGrupo] = useState('');
   const [formJanela, setFormJanela] = useState(7);
   const [formCupom, setFormCupom] = useState('');
+  const [formImagem, setFormImagem] = useState<File | null>(null);
+  const [formImagemUrl, setFormImagemUrl] = useState('');
+  const [uploadingImagem, setUploadingImagem] = useState(false);
   const [gruposProdutos, setGruposProdutos] = useState<GrupoProduto[]>([]);
   const [saving, setSaving] = useState(false);
   const [previewCount, setPreviewCount] = useState<number | null>(null);
@@ -288,6 +291,8 @@ export default function Campanhas() {
     setFormOrgId(''); setFormNome(''); setFormData(undefined);
     setFormHora('18:00'); setFormPublico(''); setFormMensagem('');
     setFormGrupo(''); setFormJanela(7); setFormCupom('');
+    setFormImagem(null);
+    setFormImagemUrl('');
     setPreviewCount(null);
     setEditingCampanha(null);
   };
@@ -312,6 +317,8 @@ export default function Campanhas() {
     setFormGrupo(c.grupo_produto || '');
     setFormJanela(c.janela_conversao || 7);
     setFormCupom(c.cupom || '');
+    setFormImagemUrl((c as any).imagem_url || '');
+    setFormImagem(null);
     if (c.data_disparo) {
       const d = new Date(c.data_disparo);
       setFormData(d);
@@ -347,6 +354,7 @@ export default function Campanhas() {
       grupo_produto: formGrupo && formGrupo !== 'todos' ? formGrupo : null,
       janela_conversao: formJanela,
       cupom: formCupom.trim().toUpperCase() || null,
+      imagem_url: formImagemUrl || null,
     };
 
     let error;
@@ -458,6 +466,27 @@ export default function Campanhas() {
   const orgName = (orgId: string) => orgs.find(o => o.id === orgId)?.nome ?? '';
 
   const previewMsg = formMensagem.replace(/\{nome\}/gi, 'João');
+
+  const handleImagemUpload = async (file: File) => {
+    if (!file) return;
+    setUploadingImagem(true);
+    const ext = file.name.split('.').pop();
+    const fileName = `${Date.now()}.${ext}`;
+    const { error } = await supabase.storage
+      .from('campanhas-imagens')
+      .upload(fileName, file, { upsert: true });
+    if (error) {
+      toast.error('Erro ao fazer upload da imagem');
+      setUploadingImagem(false);
+      return;
+    }
+    const { data: urlData } = supabase.storage
+      .from('campanhas-imagens')
+      .getPublicUrl(fileName);
+    setFormImagemUrl(urlData.publicUrl);
+    setUploadingImagem(false);
+    toast.success('Imagem enviada!');
+  };
 
   /* ── render ── */
 
