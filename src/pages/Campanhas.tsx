@@ -67,6 +67,13 @@ interface GrupoProduto {
   nome: string;
 }
 
+interface ProdutoPublico {
+  nome_produto: string;
+  grupo: string;
+  total_clientes: number;
+  total_pedidos: number;
+}
+
 interface ResumoCampanha {
   id: string;
   organizacao_id: string;
@@ -167,6 +174,8 @@ export default function Campanhas() {
   const [saving, setSaving] = useState(false);
   const [previewCount, setPreviewCount] = useState<number | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
+  const [produtosPublico, setProdutosPublico] = useState<ProdutoPublico[]>([]);
+  const [loadingProdutos, setLoadingProdutos] = useState(false);
 
   const orgsComModulo = useMemo(() => orgs.filter(o => o.modulos?.campanhas === true), [orgs]);
 
@@ -267,7 +276,7 @@ export default function Campanhas() {
 
   const moduloAtivo = selectedOrg?.modulos?.campanhas === true;
 
-  useEffect(() => { setPreviewCount(null); }, [formPublico, formGrupo, formOrgId]);
+  useEffect(() => { setPreviewCount(null); setProdutosPublico([]); }, [formPublico, formGrupo, formOrgId]);
 
   const handlePreviewPublico = async () => {
     if (!formOrgId || !formPublico) {
@@ -283,6 +292,15 @@ export default function Campanhas() {
     setLoadingPreview(false);
     if (error) { toast.error('Erro ao buscar público'); return; }
     setPreviewCount(data?.length ?? 0);
+    setLoadingProdutos(true);
+    supabase.rpc('buscar_produtos_publico_campanha', {
+      p_org_id: formOrgId,
+      p_filtro: formPublico,
+      p_grupo: formGrupo && formGrupo !== 'todos' ? formGrupo : null,
+    }).then(({ data: prodData }) => {
+      setProdutosPublico((prodData as ProdutoPublico[]) ?? []);
+      setLoadingProdutos(false);
+    });
   };
 
   /* ── save (insert or update) ── */
@@ -940,23 +958,52 @@ export default function Campanhas() {
                 </div>
 
                 {/* Pré-visualizar público */}
-                <div className="flex items-center gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handlePreviewPublico}
-                    disabled={loadingPreview || !formOrgId || !formPublico}
-                    className="gap-2"
-                  >
-                    <Users className="h-4 w-4" />
-                    {loadingPreview ? 'Buscando...' : 'Pré-visualizar público'}
-                  </Button>
-                  {previewCount !== null && (
-                    <p className="text-sm font-medium text-blue-600">
-                      📊 {previewCount} cliente{previewCount !== 1 ? 's' : ''}{' '}
-                      {previewCount !== 1 ? 'serão alcançados' : 'será alcançado'}
-                    </p>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePreviewPublico}
+                      disabled={loadingPreview || !formOrgId || !formPublico}
+                      className="gap-2"
+                    >
+                      <Users className="h-4 w-4" />
+                      {loadingPreview ? 'Buscando...' : 'Pré-visualizar público'}
+                    </Button>
+                    {previewCount !== null && (
+                      <p className="text-sm font-medium text-blue-600">
+                        📊 {previewCount} cliente{previewCount !== 1 ? 's' : ''}{' '}
+                        {previewCount !== 1 ? 'serão alcançados' : 'será alcançado'}
+                      </p>
+                    )}
+                  </div>
+                  {loadingProdutos && (
+                    <p className="text-xs text-slate-400">Buscando produtos mais pedidos...</p>
+                  )}
+                  {!loadingProdutos && produtosPublico.length > 0 && (
+                    <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 space-y-2">
+                      <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
+                        💡 O que esse público mais pediu
+                      </p>
+                      <div className="space-y-1.5">
+                        {produtosPublico.map((p, i) => (
+                          <div key={i} className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-xs font-medium text-slate-600 w-4 shrink-0">{i + 1}.</span>
+                              <span className="text-sm text-slate-700 truncate">{p.nome_produto}</span>
+                              {p.grupo && p.grupo !== 'Sem grupo' && (
+                                <span className="text-xs text-slate-400 shrink-0">· {p.grupo}</span>
+                              )}
+                            </div>
+                            <span className="text-xs font-medium text-blue-600 shrink-0 whitespace-nowrap">
+                              {p.total_clientes} cliente{p.total_clientes !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-slate-400 pt-1">Use essa informação para escolher o filtro de produto acima.</p>
+                    </div>
                   )}
                 </div>
 
