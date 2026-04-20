@@ -27,6 +27,14 @@ interface KpisRetencao {
   recompra_media_dias: number;
 }
 
+interface CohortRow {
+  mes_aquisicao: string;
+  mes_aquisicao_order: string;
+  total_inicial: number;
+  mes_offset: number;
+  valor: number;
+}
+
 export default function ClientesAnaliseAvancada() {
   const [orgs, setOrgs] = useState<Organizacao[]>([]);
   const [selectedOrg, setSelectedOrg] = useState<Organizacao | null>(null);
