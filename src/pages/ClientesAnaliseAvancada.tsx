@@ -184,20 +184,110 @@ export default function ClientesAnaliseAvancada() {
                 <Card><CardContent className="py-8 text-center text-slate-400">Sem dados disponíveis</CardContent></Card>
               )}
 
-              {/* BLOCO 2 - Cohort placeholder */}
+              {/* BLOCO 2 - Cohort */}
               <Card>
                 <CardContent className="pt-6">
-                  <h2 className="text-lg font-semibold text-slate-800">Análise de cohort</h2>
-                  <p className="text-sm text-slate-400 mb-6">Retenção mês a mês por safra de clientes.</p>
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <BarChart3 className="h-12 w-12 text-slate-300 mb-3" />
-                    <p className="text-slate-500">Em construção — será implementado na próxima versão</p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Mostrará quantos % de cada safra continua comprando ao longo dos meses
-                    </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                    <div>
+                      <h2 className="text-lg font-semibold text-slate-800">Análise de cohort</h2>
+                      <p className="text-sm text-slate-400">Retenção mês a mês por safra de clientes.</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setCohortModo('clientes')}
+                        className={cn(
+                          'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
+                          cohortModo === 'clientes' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                        )}
+                      >
+                        % Retenção
+                      </button>
+                      <button
+                        onClick={() => setCohortModo('receita')}
+                        className={cn(
+                          'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
+                          cohortModo === 'receita' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                        )}
+                      >
+                        Receita
+                      </button>
+                    </div>
                   </div>
+                  {loadingCohort ? (
+                    <div className="space-y-2">
+                      {[1,2,3].map(i => <Skeleton key={i} className="h-10 w-full" />)}
+                    </div>
+                  ) : cohortData.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <BarChart3 className="h-12 w-12 text-slate-300 mb-3" />
+                      <p className="text-slate-500">Dados insuficientes para análise de cohort</p>
+                      <p className="text-xs text-slate-400 mt-1">Necessário pelo menos 2 meses de histórico</p>
+                    </div>
+                  ) : (() => {
+                    const safras = [...new Set(cohortData.map(r => r.mes_aquisicao))];
+                    const maxOffset = Math.max(...cohortData.map(r => r.mes_offset));
+                    const offsets = Array.from({ length: maxOffset + 1 }, (_, i) => i);
+                    const getCellValue = (safra: string, offset: number) => {
+                      const row = cohortData.find(r => r.mes_aquisicao === safra && r.mes_offset === offset);
+                      return row ? row.valor : null;
+                    };
+                    const getCellColor = (valor: number | null, offset: number) => {
+                      if (valor === null) return 'bg-slate-50 text-slate-300';
+                      if (offset === 0) return 'bg-blue-600 text-white font-semibold';
+                      if (cohortModo === 'clientes') {
+                        if (valor >= 50) return 'bg-emerald-100 text-emerald-800';
+                        if (valor >= 25) return 'bg-amber-100 text-amber-800';
+                        return 'bg-red-50 text-red-700';
+                      }
+                      return 'bg-blue-50 text-blue-800';
+                    };
+                    return (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr>
+                              <th className="text-left py-2 pr-3 text-slate-500 font-medium whitespace-nowrap">Safra</th>
+                              <th className="text-center py-2 px-1 text-slate-500 font-medium whitespace-nowrap">Clientes</th>
+                              {offsets.map(o => (
+                                <th key={o} className="text-center py-2 px-1 text-slate-500 font-medium whitespace-nowrap">
+                                  {o === 0 ? 'M+0' : `M+${o}`}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {safras.map(safra => {
+                              const totalInicial = cohortData.find(r => r.mes_aquisicao === safra)?.total_inicial ?? 0;
+                              return (
+                                <tr key={safra} className="border-t border-slate-100">
+                                  <td className="py-2 pr-3 text-slate-700 font-medium whitespace-nowrap">{safra}</td>
+                                  <td className="py-2 px-1 text-center text-slate-500">{totalInicial}</td>
+                                  {offsets.map(o => {
+                                    const val = getCellValue(safra, o);
+                                    return (
+                                      <td key={o} className="py-1 px-0.5">
+                                        <div className={cn('rounded text-center py-1 px-1 min-w-[36px]', getCellColor(val, o))}>
+                                          {val !== null
+                                            ? cohortModo === 'clientes'
+                                              ? o === 0 ? totalInicial : `${Math.round(val)}%`
+                                              : `R$${Number(val).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`
+                                            : '—'}
+                                        </div>
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                        <p className="text-xs text-slate-400 mt-3">M+0 = mês de entrada · M+1 = % que voltou no mês seguinte</p>
+                      </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
+
 
               {/* BLOCO 3 - Insights */}
               {kpis && (
