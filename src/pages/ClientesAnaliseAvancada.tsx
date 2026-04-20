@@ -74,7 +74,23 @@ export default function ClientesAnaliseAvancada() {
       setKpis(row ?? null);
       setLoading(false);
     });
+    setLoadingCohort(true);
+    supabase.rpc('calcular_cohort', { p_org_id: selectedOrg.id, p_modo: cohortModo }).then(({ data, error }) => {
+      if (error) { setLoadingCohort(false); return; }
+      setCohortData((data as CohortRow[]) ?? []);
+      setLoadingCohort(false);
+    });
   }, [selectedOrg]);
+
+  useEffect(() => {
+    if (!selectedOrg) return;
+    setLoadingCohort(true);
+    supabase.rpc('calcular_cohort', { p_org_id: selectedOrg.id, p_modo: cohortModo }).then(({ data, error }) => {
+      if (error) { setLoadingCohort(false); return; }
+      setCohortData((data as CohortRow[]) ?? []);
+      setLoadingCohort(false);
+    });
+  }, [cohortModo, selectedOrg]);
 
   const taxaColor = (taxa: number) => {
     if (taxa >= 50) return 'text-emerald-600';
