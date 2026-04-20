@@ -43,6 +43,9 @@ export default function ClientesAnaliseAvancada() {
 
   const [kpis, setKpis] = useState<KpisRetencao | null>(null);
   const [loading, setLoading] = useState(false);
+  const [cohortData, setCohortData] = useState<CohortRow[]>([]);
+  const [loadingCohort, setLoadingCohort] = useState(false);
+  const [cohortModo, setCohortModo] = useState<'clientes' | 'receita'>('clientes');
 
   const filteredOrgs = useMemo(
     () => orgSearch.length > 0 ? orgs.filter(o => o.nome?.toLowerCase().includes(orgSearch.toLowerCase())) : orgs,
