@@ -831,7 +831,8 @@ export default function Campanhas() {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="space-y-5 py-2">
+              <div className="py-2 grid grid-cols-1 sm:grid-cols-[1fr_200px] gap-6 items-start">
+                <div className="space-y-5">
                 {/* Org */}
                 <div className="space-y-2">
                   <Label>Organização</Label>
@@ -1090,16 +1091,15 @@ export default function Campanhas() {
                   <p className="text-xs text-slate-400">Use {'{nome}'} para personalizar com o nome do cliente</p>
                 </div>
 
-                {/* Preview */}
-                {(formMensagem.trim() || formImagemUrl) && (
-                  <div className="space-y-2">
-                    <Label className="text-xs text-slate-400">Como vai chegar no WhatsApp</Label>
-                    <WhatsAppPreview mensagem={previewMsg} imagemUrl={formImagemUrl} />
-                    {formCupom.trim() && (
-                      <p className="text-xs text-blue-500 text-center">🎟️ Cupom: {formCupom.toUpperCase()}</p>
-                    )}
-                  </div>
+              </div>
+
+              <div className="hidden sm:flex flex-col items-center gap-2 sticky top-0 pt-2">
+                <p className="text-xs text-slate-400 font-medium">Como vai chegar</p>
+                <WhatsAppPreview mensagem={previewMsg} imagemUrl={formImagemUrl} />
+                {formCupom.trim() && (
+                  <p className="text-xs text-blue-500 text-center">🎟️ {formCupom.toUpperCase()}</p>
                 )}
+              </div>
               </div>
 
               <DialogFooter className="gap-2 sm:gap-0">
