@@ -1091,6 +1091,16 @@ export default function Campanhas() {
                   <p className="text-xs text-slate-400">Use {'{nome}'} para personalizar com o nome do cliente</p>
                 </div>
 
+                {(formMensagem.trim() || formImagemUrl) && (
+                  <div className="sm:hidden space-y-1">
+                    <p className="text-xs text-slate-400 font-medium">Como vai chegar no WhatsApp</p>
+                    <WhatsAppPreview mensagem={previewMsg} imagemUrl={formImagemUrl} />
+                    {formCupom.trim() && (
+                      <p className="text-xs text-blue-500 text-center">🎟️ {formCupom.toUpperCase()}</p>
+                    )}
+                  </div>
+                )}
+
               </div>
 
               <div className="hidden sm:flex flex-col items-center gap-2 sticky top-0 pt-2">
