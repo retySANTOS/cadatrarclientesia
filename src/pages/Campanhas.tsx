@@ -60,6 +60,7 @@ interface Campanha {
   grupo_produto: string | null;
   janela_conversao: number | null;
   cupom: string | null;
+  imagem_url?: string | null;
 }
 
 interface GrupoProduto {
@@ -1090,23 +1091,12 @@ export default function Campanhas() {
                 </div>
 
                 {/* Preview */}
-                {formMensagem.trim() && (
+                {(formMensagem.trim() || formImagemUrl) && (
                   <div className="space-y-2">
-                    <Label className="text-xs text-slate-400">Pré-visualização</Label>
-                    <div className="flex justify-end">
-                      <div className="max-w-[75%] rounded-lg rounded-tr-sm bg-emerald-100 px-3 py-2 text-sm text-slate-800 shadow-sm whitespace-pre-wrap">
-                        {previewMsg}
-                      </div>
-                    </div>
-                    {formGrupo && (
-                      <p className="text-xs text-slate-400 mt-2">
-                        📎 Filtro: clientes que compraram {gruposProdutos.find(g => g.id === formGrupo)?.nome ?? formGrupo}
-                      </p>
-                    )}
+                    <Label className="text-xs text-slate-400">Como vai chegar no WhatsApp</Label>
+                    <WhatsAppPreview mensagem={previewMsg} imagemUrl={formImagemUrl} />
                     {formCupom.trim() && (
-                      <p className="text-xs text-blue-500 mt-1">
-                        🎟️ Cupom: {formCupom.toUpperCase()} — conversões rastreadas por uso
-                      </p>
+                      <p className="text-xs text-blue-500 text-center">🎟️ Cupom: {formCupom.toUpperCase()}</p>
                     )}
                   </div>
                 )}
@@ -1167,14 +1157,13 @@ export default function Campanhas() {
                       </div>
                     </div>
 
-                    {/* Mensagem */}
+                    {/* Preview WhatsApp */}
                     <div>
-                      <p className="text-slate-400 text-xs mb-1.5">Mensagem</p>
-                      <div className="flex justify-end">
-                        <div className="max-w-[85%] rounded-lg rounded-tr-sm bg-emerald-100 px-3 py-2 text-sm text-slate-800 shadow-sm whitespace-pre-wrap">
-                          {viewCampanha.mensagem || '—'}
-                        </div>
-                      </div>
+                      <p className="text-slate-400 text-xs mb-2">Como chegou no WhatsApp</p>
+                      <WhatsAppPreview
+                        mensagem={viewCampanha.mensagem || ''}
+                        imagemUrl={(viewCampanha as any).imagem_url}
+                      />
                     </div>
 
                     {/* Métricas se enviada */}
@@ -1277,6 +1266,51 @@ interface CampanhaSectionProps {
   onCancel: (c: Campanha) => void;
   onDelete: (c: Campanha) => void;
   onArchive: (c: Campanha) => void;
+}
+
+function WhatsAppPreview({ mensagem, imagemUrl }: { mensagem: string; imagemUrl?: string | null }) {
+  const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  return (
+    <div className="flex justify-center">
+      <div className="relative w-[220px] bg-slate-800 rounded-[28px] p-2 shadow-xl">
+        {/* Notch */}
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-2 bg-slate-900 rounded-full z-10" />
+        {/* Screen */}
+        <div className="rounded-[20px] overflow-hidden bg-[#ECE5DD]" style={{ minHeight: 320 }}>
+          {/* Header WhatsApp */}
+          <div className="bg-[#075E54] px-3 pt-7 pb-2 flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-emerald-300 flex items-center justify-center text-xs font-bold text-emerald-900 shrink-0">C</div>
+            <div>
+              <p className="text-white text-xs font-semibold leading-tight">Cliente</p>
+              <p className="text-emerald-200 text-[10px]">online</p>
+            </div>
+          </div>
+          {/* Chat area */}
+          <div className="p-2 space-y-1 min-h-[200px]">
+            {/* Bolha da mensagem */}
+            <div className="flex justify-end">
+              <div className="bg-[#DCF8C6] rounded-lg rounded-tr-none shadow-sm max-w-[170px] overflow-hidden">
+                {imagemUrl && (
+                  <img
+                    src={imagemUrl}
+                    alt="Imagem da campanha"
+                    className="w-full object-cover max-h-28"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                )}
+                {mensagem && (
+                  <div className="px-2 py-1">
+                    <p className="text-[11px] text-slate-800 whitespace-pre-wrap break-words leading-tight">{mensagem}</p>
+                    <p className="text-[9px] text-slate-400 text-right mt-0.5">{hora} ✓✓</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function CampanhaSection({ title, items, orgName, onView, onEdit, onCancel, onDelete, onArchive }: CampanhaSectionProps) {
