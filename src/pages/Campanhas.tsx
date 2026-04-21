@@ -24,7 +24,7 @@ import {
 import {
   Megaphone, Users, TrendingUp, Clock, Search, Plus, Send, BarChart3,
   AlertCircle, CalendarIcon, Pencil, XCircle, Trash2, ShoppingCart, DollarSign,
-  Archive, Download,
+  Archive, Download, Copy,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -409,6 +409,24 @@ export default function Campanhas() {
     loadCampanhas(); loadResumo(); loadConversoes();
   };
 
+  /* ── duplicate campanha ── */
+  const handleDuplicate = (c: Campanha) => {
+    resetForm();
+    setFormOrgId(c.organizacao_id);
+    setFormNome(`Cópia de ${c.nome}`);
+    setFormMensagem(c.mensagem ?? '');
+    setFormPublico(c.filtro_clientes ?? '');
+    setFormGrupo(c.grupo_produto || '');
+    setFormJanela(c.janela_conversao || 7);
+    setFormCupom(c.cupom || '');
+    setFormImagemUrl((c as any).imagem_url || '');
+    setFormImagem(null);
+    setFormData(undefined);
+    setFormHora('18:00');
+    setDialogOpen(true);
+    toast.success('Campanha duplicada — revise e agende');
+  };
+
   /* ── export functions ── */
   const handleExportExcel = () => {
     if (conversoes.length === 0) { toast.error('Sem dados para exportar'); return; }
@@ -676,17 +694,17 @@ export default function Campanhas() {
                   {agendadas.length > 0 && (
                     <CampanhaSection title="AGENDADAS" items={agendadas} orgName={orgName}
                       onView={setViewCampanha} onEdit={openEdit}
-                      onCancel={setCancelTarget} onDelete={setDeleteTarget} onArchive={handleArchive} />
+                      onCancel={setCancelTarget} onDelete={setDeleteTarget} onArchive={handleArchive} onDuplicate={handleDuplicate} />
                   )}
                   {rascunhos.length > 0 && (
                     <CampanhaSection title="RASCUNHOS" items={rascunhos} orgName={orgName}
                       onView={setViewCampanha} onEdit={openEdit}
-                      onCancel={setCancelTarget} onDelete={setDeleteTarget} onArchive={handleArchive} />
+                      onCancel={setCancelTarget} onDelete={setDeleteTarget} onArchive={handleArchive} onDuplicate={handleDuplicate} />
                   )}
                   {historico.length > 0 && (
                     <CampanhaSection title="HISTÓRICO" items={historico} orgName={orgName}
                       onView={setViewCampanha} onEdit={openEdit}
-                      onCancel={setCancelTarget} onDelete={setDeleteTarget} onArchive={handleArchive} />
+                      onCancel={setCancelTarget} onDelete={setDeleteTarget} onArchive={handleArchive} onDuplicate={handleDuplicate} />
                   )}
                 </div>
               )}
@@ -1276,6 +1294,7 @@ interface CampanhaSectionProps {
   onCancel: (c: Campanha) => void;
   onDelete: (c: Campanha) => void;
   onArchive: (c: Campanha) => void;
+  onDuplicate: (c: Campanha) => void;
 }
 
 function WhatsAppPreview({ mensagem, imagemUrl }: { mensagem: string; imagemUrl?: string | null }) {
@@ -1323,14 +1342,14 @@ function WhatsAppPreview({ mensagem, imagemUrl }: { mensagem: string; imagemUrl?
   );
 }
 
-function CampanhaSection({ title, items, orgName, onView, onEdit, onCancel, onDelete, onArchive }: CampanhaSectionProps) {
+function CampanhaSection({ title, items, orgName, onView, onEdit, onCancel, onDelete, onArchive, onDuplicate }: CampanhaSectionProps) {
   return (
     <div>
       <h3 className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase mb-2">{title}</h3>
       <div className="space-y-2">
         {items.map(c => (
           <CampanhaCard key={c.id} campanha={c} orgName={orgName}
-            onView={onView} onEdit={onEdit} onCancel={onCancel} onDelete={onDelete} onArchive={onArchive} />
+            onView={onView} onEdit={onEdit} onCancel={onCancel} onDelete={onDelete} onArchive={onArchive} onDuplicate={onDuplicate} />
         ))}
       </div>
     </div>
@@ -1345,14 +1364,16 @@ interface CampanhaCardProps {
   onCancel: (c: Campanha) => void;
   onDelete: (c: Campanha) => void;
   onArchive: (c: Campanha) => void;
+  onDuplicate: (c: Campanha) => void;
 }
 
-function CampanhaCard({ campanha: c, orgName, onView, onEdit, onCancel, onDelete, onArchive }: CampanhaCardProps) {
+function CampanhaCard({ campanha: c, orgName, onView, onEdit, onCancel, onDelete, onArchive, onDuplicate }: CampanhaCardProps) {
   const t = taxa(c.total_enviados, c.total_responderam);
   const canEdit = ['agendada', 'rascunho'].includes(c.status);
   const canCancel = c.status === 'agendada';
   const canDelete = ['rascunho', 'cancelada'].includes(c.status);
   const canArchive = ['enviada', 'cancelada'].includes(c.status);
+  const canDuplicate = true;
 
   return (
     <Card
@@ -1445,6 +1466,17 @@ function CampanhaCard({ campanha: c, orgName, onView, onEdit, onCancel, onDelete
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Excluir</TooltipContent>
+              </Tooltip>
+            )}
+            {canDuplicate && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-400 hover:text-blue-600"
+                    onClick={e => { e.stopPropagation(); onDuplicate(c); }}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Duplicar campanha</TooltipContent>
               </Tooltip>
             )}
           </div>
