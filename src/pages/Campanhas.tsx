@@ -694,17 +694,17 @@ export default function Campanhas() {
                   {agendadas.length > 0 && (
                     <CampanhaSection title="AGENDADAS" items={agendadas} orgName={orgName}
                       onView={setViewCampanha} onEdit={openEdit}
-                      onCancel={setCancelTarget} onDelete={setDeleteTarget} onArchive={handleArchive} />
+                      onCancel={setCancelTarget} onDelete={setDeleteTarget} onArchive={handleArchive} onDuplicate={handleDuplicate} />
                   )}
                   {rascunhos.length > 0 && (
                     <CampanhaSection title="RASCUNHOS" items={rascunhos} orgName={orgName}
                       onView={setViewCampanha} onEdit={openEdit}
-                      onCancel={setCancelTarget} onDelete={setDeleteTarget} onArchive={handleArchive} />
+                      onCancel={setCancelTarget} onDelete={setDeleteTarget} onArchive={handleArchive} onDuplicate={handleDuplicate} />
                   )}
                   {historico.length > 0 && (
                     <CampanhaSection title="HISTÓRICO" items={historico} orgName={orgName}
                       onView={setViewCampanha} onEdit={openEdit}
-                      onCancel={setCancelTarget} onDelete={setDeleteTarget} onArchive={handleArchive} />
+                      onCancel={setCancelTarget} onDelete={setDeleteTarget} onArchive={handleArchive} onDuplicate={handleDuplicate} />
                   )}
                 </div>
               )}
@@ -1342,14 +1342,14 @@ function WhatsAppPreview({ mensagem, imagemUrl }: { mensagem: string; imagemUrl?
   );
 }
 
-function CampanhaSection({ title, items, orgName, onView, onEdit, onCancel, onDelete, onArchive }: CampanhaSectionProps) {
+function CampanhaSection({ title, items, orgName, onView, onEdit, onCancel, onDelete, onArchive, onDuplicate }: CampanhaSectionProps) {
   return (
     <div>
       <h3 className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase mb-2">{title}</h3>
       <div className="space-y-2">
         {items.map(c => (
           <CampanhaCard key={c.id} campanha={c} orgName={orgName}
-            onView={onView} onEdit={onEdit} onCancel={onCancel} onDelete={onDelete} onArchive={onArchive} />
+            onView={onView} onEdit={onEdit} onCancel={onCancel} onDelete={onDelete} onArchive={onArchive} onDuplicate={onDuplicate} />
         ))}
       </div>
     </div>
@@ -1367,12 +1367,13 @@ interface CampanhaCardProps {
   onDuplicate: (c: Campanha) => void;
 }
 
-function CampanhaCard({ campanha: c, orgName, onView, onEdit, onCancel, onDelete, onArchive }: CampanhaCardProps) {
+function CampanhaCard({ campanha: c, orgName, onView, onEdit, onCancel, onDelete, onArchive, onDuplicate }: CampanhaCardProps) {
   const t = taxa(c.total_enviados, c.total_responderam);
   const canEdit = ['agendada', 'rascunho'].includes(c.status);
   const canCancel = c.status === 'agendada';
   const canDelete = ['rascunho', 'cancelada'].includes(c.status);
   const canArchive = ['enviada', 'cancelada'].includes(c.status);
+  const canDuplicate = true;
 
   return (
     <Card
