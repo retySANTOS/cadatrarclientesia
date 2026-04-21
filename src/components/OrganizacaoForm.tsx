@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Copy, Eye, EyeOff, Maximize2, Crown, Rocket, Save, Pencil, Trash2 } from 'lucide-react';
+import { Copy, Eye, EyeOff, Maximize2, Crown, Rocket, Save, Pencil, Trash2, AlertCircle, Clock, CalendarClock, TrendingDown } from 'lucide-react';
 import { IntegrationCheck } from '@/components/IntegrationCheck';
 import { PromptHistory } from '@/components/PromptHistory';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
@@ -58,6 +58,8 @@ export interface Organizacao {
   ativado: boolean;
   mensagem_boas_vindas: string;
   dias_cliente_em_risco: number;
+  intervalo_campanhas_dias: number;
+  max_campanhas_sem_conversao: number;
   modulos: ModulosConfig;
   created_by?: string;
 }
@@ -164,6 +166,8 @@ const emptyOrg: Organizacao = {
   logo_url: '', cidade_estado: '', endereco_completo: '',
   ativado: true, mensagem_boas_vindas: '',
   dias_cliente_em_risco: 25,
+  intervalo_campanhas_dias: 15,
+  max_campanhas_sem_conversao: 3,
   modulos: { ...DEFAULT_MODULOS },
 };
 
@@ -199,6 +203,8 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
       setForm({
         ...organizacao,
         dias_cliente_em_risco: organizacao.dias_cliente_em_risco ?? 25,
+        intervalo_campanhas_dias: organizacao.intervalo_campanhas_dias ?? 15,
+        max_campanhas_sem_conversao: organizacao.max_campanhas_sem_conversao ?? 3,
         modulos: { ...DEFAULT_MODULOS, ...organizacao.modulos },
       });
       if (organizacao.id) reloadTemplates(organizacao.id);
@@ -268,10 +274,11 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
 
         <Tabs defaultValue="geral" className="mt-2">
           <TabsList className="w-full">
-            <TabsTrigger value="geral" className="flex-1">Geral</TabsTrigger>
-            <TabsTrigger value="ia" className="flex-1">Config. IA</TabsTrigger>
-            <TabsTrigger value="endereco" className="flex-1">Endereço & Status</TabsTrigger>
-            <TabsTrigger value="modulos" className="flex-1">Módulos</TabsTrigger>
+            <TabsTrigger value="geral" className="flex-1 text-xs sm:text-sm px-1">Geral</TabsTrigger>
+            <TabsTrigger value="ia" className="flex-1 text-xs sm:text-sm px-1">IA</TabsTrigger>
+            <TabsTrigger value="local" className="flex-1 text-xs sm:text-sm px-1">Local</TabsTrigger>
+            <TabsTrigger value="status" className="flex-1 text-xs sm:text-sm px-1">Status</TabsTrigger>
+            <TabsTrigger value="modulos" className="flex-1 text-xs sm:text-sm px-1">Módulos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="geral" className="space-y-4 pt-4">
@@ -497,7 +504,7 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
             </div>
           </TabsContent>
 
-          <TabsContent value="endereco" className="space-y-4 pt-4">
+          <TabsContent value="local" className="space-y-4 pt-4">
             <div className="space-y-2">
               <Label>Logo URL</Label>
               <Input value={form.logo_url} onChange={(e) => update('logo_url', e.target.value)} />
@@ -510,17 +517,41 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
               <Label>Endereço Completo</Label>
               <Input value={form.endereco_completo} onChange={(e) => update('endereco_completo', e.target.value)} />
             </div>
-            <div className="flex items-center gap-2">
-              <Switch checked={form.ativado} onCheckedChange={(v) => update('ativado', v)} />
-              <Label>Status da Organização</Label>
-            </div>
             <div className="space-y-2">
               <Label>Mensagem de Boas-vindas</Label>
               <Textarea value={form.mensagem_boas_vindas} onChange={(e) => update('mensagem_boas_vindas', e.target.value)} rows={3} />
             </div>
-            <div className="space-y-2 pt-2 border-t">
-              <Label>Considerar cliente em risco após</Label>
-              <div className="flex items-center gap-2">
+          </TabsContent>
+
+          <TabsContent value="status" className="space-y-3 pt-4">
+            <div className="rounded-lg border p-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-md bg-red-50 p-2 shrink-0">
+                  <AlertCircle className="h-4 w-4 text-red-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">Status da organização</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Desative quando o cliente não pagar ou pausar o serviço. O agente para de responder imediatamente.</p>
+                    </div>
+                    <Switch checked={form.ativado} onCheckedChange={(v) => update('ativado', v)} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="rounded-md bg-amber-50 p-2 shrink-0">
+                  <Clock className="h-4 w-4 text-amber-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-800">Cliente em risco após</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Dias sem comprar para o cliente entrar na lista de risco e virar alvo de campanhas de reativação.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 pl-11">
                 <Input
                   type="number"
                   min={7}
@@ -530,13 +561,65 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
                     ...prev,
                     dias_cliente_em_risco: Math.max(7, Math.min(90, Number(e.target.value) || 25)),
                   }))}
-                  className="w-32"
+                  className="w-28"
                 />
                 <span className="text-sm text-muted-foreground">dias sem comprar</span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Marmitarias: 7-15 dias. Pizzarias: 15-25 dias. Comida japonesa: 30-45 dias.
-              </p>
+              <p className="text-xs text-muted-foreground pl-11">Marmitarias: 7–15 · Pizzarias: 15–25 · Japonesa: 30–45</p>
+            </div>
+
+            <div className="rounded-lg border p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="rounded-md bg-blue-50 p-2 shrink-0">
+                  <CalendarClock className="h-4 w-4 text-blue-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-800">Intervalo entre campanhas</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Cooling period — clientes que receberam campanha há menos de X dias são pulados no próximo disparo, evitando spam.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 pl-11">
+                <Input
+                  type="number"
+                  min={1}
+                  max={90}
+                  value={form.intervalo_campanhas_dias ?? 15}
+                  onChange={(e) => setForm(prev => ({
+                    ...prev,
+                    intervalo_campanhas_dias: Math.max(1, Math.min(90, Number(e.target.value) || 15)),
+                  }))}
+                  className="w-28"
+                />
+                <span className="text-sm text-muted-foreground">dias entre disparos</span>
+              </div>
+              <p className="text-xs text-muted-foreground pl-11">Padrão recomendado: 15 dias.</p>
+            </div>
+
+            <div className="rounded-lg border p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="rounded-md bg-slate-100 p-2 shrink-0">
+                  <TrendingDown className="h-4 w-4 text-slate-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-800">Tentativas até sunsetting</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Após X campanhas sem nenhuma compra, o cliente recebe mensagem de despedida e sai automaticamente das próximas campanhas.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 pl-11">
+                <Input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={form.max_campanhas_sem_conversao ?? 3}
+                  onChange={(e) => setForm(prev => ({
+                    ...prev,
+                    max_campanhas_sem_conversao: Math.max(1, Math.min(10, Number(e.target.value) || 3)),
+                  }))}
+                  className="w-28"
+                />
+                <span className="text-sm text-muted-foreground">campanhas sem compra</span>
+              </div>
+              <p className="text-xs text-muted-foreground pl-11">Padrão recomendado: 3 tentativas.</p>
             </div>
           </TabsContent>
 
