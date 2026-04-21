@@ -1468,6 +1468,17 @@ function CampanhaCard({ campanha: c, orgName, onView, onEdit, onCancel, onDelete
                 <TooltipContent>Excluir</TooltipContent>
               </Tooltip>
             )}
+            {canDuplicate && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-400 hover:text-blue-600"
+                    onClick={e => { e.stopPropagation(); onDuplicate(c); }}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Duplicar campanha</TooltipContent>
+              </Tooltip>
+            )}
           </div>
         </div>
       </CardContent>
