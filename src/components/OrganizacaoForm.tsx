@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Copy, Eye, EyeOff, Maximize2, Crown, Rocket, Save, Pencil, Trash2 } from 'lucide-react';
+import { Copy, Eye, EyeOff, Maximize2, Crown, Rocket, Save, Pencil, Trash2, AlertCircle, Clock, CalendarClock, TrendingDown } from 'lucide-react';
 import { IntegrationCheck } from '@/components/IntegrationCheck';
 import { PromptHistory } from '@/components/PromptHistory';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
@@ -58,6 +58,8 @@ export interface Organizacao {
   ativado: boolean;
   mensagem_boas_vindas: string;
   dias_cliente_em_risco: number;
+  intervalo_campanhas_dias: number;
+  max_campanhas_sem_conversao: number;
   modulos: ModulosConfig;
   created_by?: string;
 }
@@ -164,6 +166,8 @@ const emptyOrg: Organizacao = {
   logo_url: '', cidade_estado: '', endereco_completo: '',
   ativado: true, mensagem_boas_vindas: '',
   dias_cliente_em_risco: 25,
+  intervalo_campanhas_dias: 15,
+  max_campanhas_sem_conversao: 3,
   modulos: { ...DEFAULT_MODULOS },
 };
 
@@ -199,6 +203,8 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
       setForm({
         ...organizacao,
         dias_cliente_em_risco: organizacao.dias_cliente_em_risco ?? 25,
+        intervalo_campanhas_dias: organizacao.intervalo_campanhas_dias ?? 15,
+        max_campanhas_sem_conversao: organizacao.max_campanhas_sem_conversao ?? 3,
         modulos: { ...DEFAULT_MODULOS, ...organizacao.modulos },
       });
       if (organizacao.id) reloadTemplates(organizacao.id);
@@ -268,10 +274,11 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
 
         <Tabs defaultValue="geral" className="mt-2">
           <TabsList className="w-full">
-            <TabsTrigger value="geral" className="flex-1">Geral</TabsTrigger>
-            <TabsTrigger value="ia" className="flex-1">Config. IA</TabsTrigger>
-            <TabsTrigger value="endereco" className="flex-1">Endereço & Status</TabsTrigger>
-            <TabsTrigger value="modulos" className="flex-1">Módulos</TabsTrigger>
+            <TabsTrigger value="geral" className="flex-1 text-xs sm:text-sm px-1">Geral</TabsTrigger>
+            <TabsTrigger value="ia" className="flex-1 text-xs sm:text-sm px-1">IA</TabsTrigger>
+            <TabsTrigger value="local" className="flex-1 text-xs sm:text-sm px-1">Local</TabsTrigger>
+            <TabsTrigger value="status" className="flex-1 text-xs sm:text-sm px-1">Status</TabsTrigger>
+            <TabsTrigger value="modulos" className="flex-1 text-xs sm:text-sm px-1">Módulos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="geral" className="space-y-4 pt-4">
