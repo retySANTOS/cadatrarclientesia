@@ -78,6 +78,25 @@ export default function ClientesRelatorioGeral() {
   const [filtroStatus, setFiltroStatus] = useState('todos');
   const [busca, setBusca] = useState('');
 
+  const [sortCol, setSortCol] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  const handleSort = (col: string) => {
+    if (sortCol === col) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortCol(col);
+      setSortDir('desc');
+    }
+  };
+
+  const SortIcon = ({ col }: { col: string }) => {
+    if (sortCol !== col) return <ArrowUpDown className="inline ml-1 h-3 w-3 text-slate-300" />;
+    return sortDir === 'asc'
+      ? <ArrowUp className="inline ml-1 h-3 w-3 text-blue-500" />
+      : <ArrowDown className="inline ml-1 h-3 w-3 text-blue-500" />;
+  };
+
   const navigate = useNavigate();
 
   const filteredOrgs = useMemo(
