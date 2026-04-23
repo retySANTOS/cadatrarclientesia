@@ -541,85 +541,91 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
               </div>
             </div>
 
-            <div className="rounded-lg border p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="rounded-md bg-amber-50 p-2 shrink-0">
-                  <Clock className="h-4 w-4 text-amber-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-800">Cliente em risco após</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Dias sem comprar para o cliente entrar na lista de risco e virar alvo de campanhas de reativação.</p>
-                </div>
+            <div className="rounded-lg border">
+              <div className="border-b px-4 py-3">
+                <h3 className="text-sm font-semibold text-slate-800">Campanhas</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Regras de segmentação e cadência dos disparos automáticos.</p>
               </div>
-              <div className="flex items-center gap-2 pl-11">
-                <Input
-                  type="number"
-                  min={7}
-                  max={90}
-                  value={form.dias_cliente_em_risco ?? 25}
-                  onChange={(e) => setForm(prev => ({
-                    ...prev,
-                    dias_cliente_em_risco: Math.max(7, Math.min(90, Number(e.target.value) || 25)),
-                  }))}
-                  className="w-28"
-                />
-                <span className="text-sm text-muted-foreground">dias sem comprar</span>
+              <div className="p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-md bg-amber-50 p-2 shrink-0">
+                    <Clock className="h-4 w-4 text-amber-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-800">Cliente em risco após</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Dias sem comprar para o cliente entrar na lista de risco e virar alvo de campanhas de reativação.</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 pl-11">
+                  <Input
+                    type="number"
+                    min={7}
+                    max={90}
+                    value={form.dias_cliente_em_risco ?? 25}
+                    onChange={(e) => setForm(prev => ({
+                      ...prev,
+                      dias_cliente_em_risco: Math.max(7, Math.min(90, Number(e.target.value) || 25)),
+                    }))}
+                    className="w-28"
+                  />
+                  <span className="text-sm text-muted-foreground">dias sem comprar</span>
+                </div>
+                <p className="text-xs text-muted-foreground pl-11">Marmitarias: 7–15 · Pizzarias: 15–25 · Japonesa: 30–45</p>
               </div>
-              <p className="text-xs text-muted-foreground pl-11">Marmitarias: 7–15 · Pizzarias: 15–25 · Japonesa: 30–45</p>
-            </div>
 
-            <div className="rounded-lg border p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="rounded-md bg-blue-50 p-2 shrink-0">
-                  <CalendarClock className="h-4 w-4 text-blue-500" />
+              <div className="border-t p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-md bg-blue-50 p-2 shrink-0">
+                    <CalendarClock className="h-4 w-4 text-blue-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-800">Intervalo entre campanhas</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Cooling period — clientes que receberam campanha há menos de X dias são pulados no próximo disparo, evitando spam.</p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-800">Intervalo entre campanhas</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Cooling period — clientes que receberam campanha há menos de X dias são pulados no próximo disparo, evitando spam.</p>
+                <div className="flex items-center gap-2 pl-11">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={90}
+                    value={form.intervalo_campanhas_dias ?? 15}
+                    onChange={(e) => setForm(prev => ({
+                      ...prev,
+                      intervalo_campanhas_dias: Math.max(1, Math.min(90, Number(e.target.value) || 15)),
+                    }))}
+                    className="w-28"
+                  />
+                  <span className="text-sm text-muted-foreground">dias entre disparos</span>
                 </div>
+                <p className="text-xs text-muted-foreground pl-11">Padrão recomendado: 15 dias.</p>
               </div>
-              <div className="flex items-center gap-2 pl-11">
-                <Input
-                  type="number"
-                  min={1}
-                  max={90}
-                  value={form.intervalo_campanhas_dias ?? 15}
-                  onChange={(e) => setForm(prev => ({
-                    ...prev,
-                    intervalo_campanhas_dias: Math.max(1, Math.min(90, Number(e.target.value) || 15)),
-                  }))}
-                  className="w-28"
-                />
-                <span className="text-sm text-muted-foreground">dias entre disparos</span>
-              </div>
-              <p className="text-xs text-muted-foreground pl-11">Padrão recomendado: 15 dias.</p>
-            </div>
 
-            <div className="rounded-lg border p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="rounded-md bg-slate-100 p-2 shrink-0">
-                  <TrendingDown className="h-4 w-4 text-slate-500" />
+              <div className="border-t p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-md bg-slate-100 p-2 shrink-0">
+                    <TrendingDown className="h-4 w-4 text-slate-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-800">Tentativas até sunsetting</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Após X campanhas sem nenhuma compra, o cliente recebe mensagem de despedida e sai automaticamente das próximas campanhas.</p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-800">Tentativas até sunsetting</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Após X campanhas sem nenhuma compra, o cliente recebe mensagem de despedida e sai automaticamente das próximas campanhas.</p>
+                <div className="flex items-center gap-2 pl-11">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={form.max_campanhas_sem_conversao ?? 3}
+                    onChange={(e) => setForm(prev => ({
+                      ...prev,
+                      max_campanhas_sem_conversao: Math.max(1, Math.min(10, Number(e.target.value) || 3)),
+                    }))}
+                    className="w-28"
+                  />
+                  <span className="text-sm text-muted-foreground">campanhas sem compra</span>
                 </div>
+                <p className="text-xs text-muted-foreground pl-11">Padrão recomendado: 3 tentativas.</p>
               </div>
-              <div className="flex items-center gap-2 pl-11">
-                <Input
-                  type="number"
-                  min={1}
-                  max={10}
-                  value={form.max_campanhas_sem_conversao ?? 3}
-                  onChange={(e) => setForm(prev => ({
-                    ...prev,
-                    max_campanhas_sem_conversao: Math.max(1, Math.min(10, Number(e.target.value) || 3)),
-                  }))}
-                  className="w-28"
-                />
-                <span className="text-sm text-muted-foreground">campanhas sem compra</span>
-              </div>
-              <p className="text-xs text-muted-foreground pl-11">Padrão recomendado: 3 tentativas.</p>
             </div>
           </TabsContent>
 
