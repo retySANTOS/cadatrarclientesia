@@ -136,12 +136,29 @@ export default function ClientesRelatorioGeral() {
   }, [clientes]);
 
   const filtrados = useMemo(() => {
-    return clientes.filter(c => {
+    const filtered = clientes.filter(c => {
       if (filtroStatus !== 'todos' && c.status_rfv !== filtroStatus) return false;
       if (busca && !(c.nome_cliente ?? '').toLowerCase().includes(busca.toLowerCase())) return false;
       return true;
     });
-  }, [clientes, filtroStatus, busca]);
+    if (!sortCol) return filtered;
+    return [...filtered].sort((a, b) => {
+      let valA: any;
+      let valB: any;
+      switch (sortCol) {
+        case 'nome': valA = (a.nome_cliente ?? '').toLowerCase(); valB = (b.nome_cliente ?? '').toLowerCase(); break;
+        case 'status': valA = a.status_rfv ?? ''; valB = b.status_rfv ?? ''; break;
+        case 'compras': valA = a.total_pedidos ?? 0; valB = b.total_pedidos ?? 0; break;
+        case 'ultima_compra': valA = a.ultima_compra ?? ''; valB = b.ultima_compra ?? ''; break;
+        case 'gasto_medio': valA = a.gasto_medio ?? 0; valB = b.gasto_medio ?? 0; break;
+        case 'gasto_total': valA = a.total_gasto ?? 0; valB = b.total_gasto ?? 0; break;
+        default: return 0;
+      }
+      if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [clientes, filtroStatus, busca, sortCol, sortDir]);
 
   return (
     <DashboardLayout>
