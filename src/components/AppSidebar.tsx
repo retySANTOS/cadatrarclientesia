@@ -44,6 +44,17 @@ const productItems = [
   { title: 'Dashboard pedidos', url: '/produtos/dashboard-pedidos', icon: LayoutDashboard },
 ];
 
+// Shared class strings for the dark theme
+const itemBase =
+  "relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-slate-400 transition-colors hover:bg-slate-900 hover:text-white";
+const itemActive =
+  "bg-slate-900 text-white font-medium before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-full before:bg-brand-gradient";
+
+const subItemBase =
+  "relative flex items-center gap-3 rounded-md px-3 py-2 text-sm text-slate-500 transition-colors hover:bg-slate-900 hover:text-white";
+const subItemActive =
+  "bg-slate-900 text-white font-medium before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-full before:bg-brand-gradient";
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
@@ -57,11 +68,11 @@ export function AppSidebar() {
   const [clientesOpen, setClientesOpen] = useState(isClienteActive);
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-slate-200 bg-slate-50 [&[data-state]]:bg-slate-50">
-      <SidebarContent className="bg-slate-50">
+    <Sidebar collapsible="icon" className="border-r border-slate-800 bg-slate-950 [&[data-state]]:bg-slate-950">
+      <SidebarContent className="bg-slate-950">
         {!collapsed && (
-          <div className="flex justify-center pt-5 pb-2">
-            <img src={logo} alt="Proj Sistemas" className="w-24 mx-auto mb-8" />
+          <div className="flex justify-center pt-6 pb-4">
+            <img src={logo} alt="Proj Sistemas" className="w-28 mx-auto" />
           </div>
         )}
         <SidebarGroup>
@@ -71,10 +82,10 @@ export function AppSidebar() {
                 <SidebarMenuButton asChild>
                   <NavLink
                     to={item.url}
-                    className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
-                    activeClassName="bg-blue-50 text-blue-700 font-medium"
+                    className={itemBase}
+                    activeClassName={itemActive}
                   >
-                    <item.icon className="h-4 w-4 shrink-0" />
+                    <item.icon className="h-5 w-5 shrink-0" />
                     {!collapsed && <span>{item.title}</span>}
                   </NavLink>
                 </SidebarMenuButton>
@@ -88,11 +99,11 @@ export function AppSidebar() {
           <Collapsible open={clientesOpen} onOpenChange={setClientesOpen}>
             <CollapsibleTrigger asChild>
               <button
-                className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-blue-50 hover:text-blue-700 ${
-                  isClienteActive ? 'text-blue-700 font-medium' : 'text-slate-600'
+                className={`relative flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-slate-900 hover:text-white ${
+                  isClienteActive ? 'bg-slate-900 text-white font-medium' : 'text-slate-400'
                 }`}
               >
-                <UserCheck className="h-4 w-4 shrink-0" />
+                <UserCheck className="h-5 w-5 shrink-0" />
                 {!collapsed && (
                   <>
                     <span className="flex-1 text-left">Clientes</span>
@@ -103,16 +114,16 @@ export function AppSidebar() {
             </CollapsibleTrigger>
             {!collapsed && (
               <CollapsibleContent>
-                <SidebarMenu className="ml-4 mt-1 border-l border-slate-200 pl-2">
+                <SidebarMenu className="ml-4 mt-1 border-l border-slate-800 pl-2">
                   {clienteItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild>
                         <NavLink
                           to={item.url}
-                          className="flex items-center gap-3 rounded-md px-3 py-1.5 text-sm text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-700"
-                          activeClassName="bg-blue-50 text-blue-700 font-medium"
+                          className={subItemBase}
+                          activeClassName={subItemActive}
                         >
-                          <item.icon className="h-3.5 w-3.5 shrink-0" />
+                          <item.icon className="h-5 w-5 shrink-0" />
                           <span>{item.title}</span>
                         </NavLink>
                       </SidebarMenuButton>
@@ -129,11 +140,11 @@ export function AppSidebar() {
           <Collapsible open={productsOpen} onOpenChange={setProductsOpen}>
             <CollapsibleTrigger asChild>
               <button
-                className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-blue-50 hover:text-blue-700 ${
-                  isProductActive ? 'text-blue-700 font-medium' : 'text-slate-600'
+                className={`relative flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-slate-900 hover:text-white ${
+                  isProductActive ? 'bg-slate-900 text-white font-medium' : 'text-slate-400'
                 }`}
               >
-                <Package className="h-4 w-4 shrink-0" />
+                <Package className="h-5 w-5 shrink-0" />
                 {!collapsed && (
                   <>
                     <span className="flex-1 text-left">Produtos</span>
@@ -144,16 +155,16 @@ export function AppSidebar() {
             </CollapsibleTrigger>
             {!collapsed && (
               <CollapsibleContent>
-                <SidebarMenu className="ml-4 mt-1 border-l border-slate-200 pl-2">
+                <SidebarMenu className="ml-4 mt-1 border-l border-slate-800 pl-2">
                   {productItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild>
                         <NavLink
                           to={item.url}
-                          className="flex items-center gap-3 rounded-md px-3 py-1.5 text-sm text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-700"
-                          activeClassName="bg-blue-50 text-blue-700 font-medium"
+                          className={subItemBase}
+                          activeClassName={subItemActive}
                         >
-                          <item.icon className="h-3.5 w-3.5 shrink-0" />
+                          <item.icon className="h-5 w-5 shrink-0" />
                           <span>{item.title}</span>
                         </NavLink>
                       </SidebarMenuButton>
@@ -170,11 +181,11 @@ export function AppSidebar() {
           <Collapsible open={reportsOpen} onOpenChange={setReportsOpen}>
             <CollapsibleTrigger asChild>
               <button
-                className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-blue-50 hover:text-blue-700 ${
-                  isReportActive ? 'text-blue-700 font-medium' : 'text-slate-600'
+                className={`relative flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-slate-900 hover:text-white ${
+                  isReportActive ? 'bg-slate-900 text-white font-medium' : 'text-slate-400'
                 }`}
               >
-                <BarChart3 className="h-4 w-4 shrink-0" />
+                <BarChart3 className="h-5 w-5 shrink-0" />
                 {!collapsed && (
                   <>
                     <span className="flex-1 text-left">Relatórios</span>
@@ -185,16 +196,16 @@ export function AppSidebar() {
             </CollapsibleTrigger>
             {!collapsed && (
               <CollapsibleContent>
-                <SidebarMenu className="ml-4 mt-1 border-l border-slate-200 pl-2">
+                <SidebarMenu className="ml-4 mt-1 border-l border-slate-800 pl-2">
                   {reportItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild>
                         <NavLink
                           to={item.url}
-                          className="flex items-center gap-3 rounded-md px-3 py-1.5 text-sm text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-700"
-                          activeClassName="bg-blue-50 text-blue-700 font-medium"
+                          className={subItemBase}
+                          activeClassName={subItemActive}
                         >
-                          <item.icon className="h-3.5 w-3.5 shrink-0" />
+                          <item.icon className="h-5 w-5 shrink-0" />
                           <span>{item.title}</span>
                         </NavLink>
                       </SidebarMenuButton>
@@ -207,17 +218,17 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-slate-200 p-3 bg-slate-50">
+      <SidebarFooter className="border-t border-slate-800 p-3 bg-slate-950">
         {!collapsed && user && (
-          <p className="mb-2 truncate text-xs text-slate-400">{user.email}</p>
+          <p className="mb-2 truncate text-xs text-slate-500">{user.email}</p>
         )}
         <Button
           variant="ghost"
           size={collapsed ? 'icon' : 'sm'}
-          className="w-full justify-start gap-2 text-slate-500 hover:bg-blue-50 hover:text-blue-700"
+          className="w-full justify-start gap-2 text-slate-400 hover:bg-slate-900 hover:text-red-400"
           onClick={signOut}
         >
-          <LogOut className="h-4 w-4 shrink-0" />
+          <LogOut className="h-5 w-5 shrink-0" />
           {!collapsed && <span>Sair</span>}
         </Button>
       </SidebarFooter>
