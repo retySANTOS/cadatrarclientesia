@@ -1,79 +1,68 @@
 
 
-# Plano: Sistema Completo Proj Sistemas
+## Refatoração de Layout Global, Sidebar e Dashboard
 
-## Visao Geral
+Refatoração visual aplicando a identidade do logo **CP** (gradiente laranja → roxo) em toda a navegação principal, com foco em hierarquia, contraste e modernidade.
 
-Construir um sistema SaaS com login, dashboard, gestao de organizacoes (bares) e equipe, usando Supabase Auth + RLS + funcao `public.is_admin()` ja existente no banco.
+### 1. Identidade Visual & Logo
 
-## Estrutura de Arquivos
+- Copiar o logo enviado para `src/assets/logo_cp.png` (substitui referências ao `logo_principal.png` apenas no header e sidebar).
+- Adicionar tokens de gradiente da marca em `src/index.css` e `tailwind.config.ts`:
+  - `--brand-gradient: linear-gradient(135deg, #F25C29 0%, #2E1A87 100%)` (laranja do "C" → roxo do "P").
+  - Utilitários: `bg-brand-gradient`, `text-brand-gradient`, `border-brand-gradient`.
+- Substituir o texto **"Proj Sistemas"** no header (`DashboardLayout.tsx`) pelo logo (altura ~32px) ao lado do `SidebarTrigger`.
+- Avatar do usuário no header passa a usar `bg-brand-gradient` em vez do laranja sólido.
+
+### 2. Sidebar — tema escuro com destaque gradiente
+
+Arquivo: `src/components/AppSidebar.tsx`
+
+- Background: `bg-slate-950` (com override no `<Sidebar>` e `<SidebarContent>` / `<SidebarFooter>`).
+- Borda direita: `border-slate-800`.
+- Logo no topo: usa `logo_principal.png` atual em versão maior, centralizado, com mais respiro (`pt-6 pb-4`).
+- Itens de menu:
+  - Padding aumentado: `px-3 py-2.5` (antes `py-2`), gap `gap-3`.
+  - Cor padrão: `text-slate-400`; hover: `text-white bg-slate-900`.
+  - Ícones uniformizados em `h-5 w-5` (todos os níveis), `stroke-width` padrão.
+  - **Item ativo**: barra lateral esquerda de 3px com `bg-brand-gradient` + fundo `bg-slate-900` + texto branco. Implementado via classe `activeClassName` no `NavLink` com pseudo-elemento ou `border-l-[3px]` com gradiente aplicado via `before:` Tailwind arbitrary.
+- Submenus (Clientes / Produtos / Relatórios):
+  - Trigger no mesmo estilo dos itens principais.
+  - Conteúdo com `border-l border-slate-800` (em vez de slate-200), itens filhos `text-slate-500` → hover `text-white`.
+- Footer: e-mail `text-slate-500`, botão "Sair" `text-slate-400 hover:bg-slate-900 hover:text-red-400`.
+
+### 3. Layout Global
+
+Arquivo: `src/components/DashboardLayout.tsx`
+
+- `bg-slate-50` → mantém-se (já é cinza claro positivo).
+- Header: mantém `bg-white` + `border-slate-200`, agora exibindo logo em vez de texto.
+- `<main>`: `p-8` mantido; conteúdo dos filhos define o gap interno.
+
+### 4. Dashboard — Cards de Métricas
+
+Arquivo: `src/pages/Dashboard.tsx`
+
+- Saudação personalizada acima dos cards:
+  - `Olá, {primeiroNome}! 👋` (extrai do `user.email` antes do `@`, capitalizado) em `text-2xl font-bold text-slate-800`.
+  - Subtítulo: `Bem-vindo de volta — aqui está o resumo da operação` em `text-sm text-slate-500`.
+- Grid: `grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`.
+- Cada card:
+  - `rounded-xl border border-slate-200/70 shadow-sm bg-white p-5`.
+  - **Hover**: `hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default`.
+  - Layout horizontal: ícone à **esquerda** (container `h-12 w-12 rounded-xl` com fundo da cor a 10% — ex. `bg-blue-500/10`, ícone `h-6 w-6 text-blue-600`) + bloco de texto à direita (label `text-sm text-slate-500`, valor `text-3xl font-extrabold tabular-nums text-slate-900`).
+- Cores mantidas (azul, laranja, esmeralda) para diferenciar as métricas — alinhadas à paleta do logo (laranja em "Organizações Ativas").
+
+### 5. Detalhes técnicos
 
 ```text
-src/
-├── contexts/
-│   └── AuthContext.tsx          # Context de autenticacao + perfil + permissoes
-├── hooks/
-│   └── usePermissions.ts       # Hook para pode_criar/pode_editar/pode_excluir
-├── pages/
-│   ├── Login.tsx               # Tela de login moderna (dark)
-│   ├── Dashboard.tsx           # Resumo com cards
-│   ├── Organizacoes.tsx        # Listagem + CRUD de organizacoes
-│   └── Equipe.tsx              # Gestao de perfis
-├── components/
-│   ├── AppSidebar.tsx          # Sidebar dark fixa
-│   ├── DashboardLayout.tsx     # Layout wrapper (SidebarProvider + main)
-│   ├── ProtectedRoute.tsx      # Redireciona para /login se nao autenticado
-│   └── OrganizacaoForm.tsx     # Formulario 17 campos com Tabs
-└── App.tsx                     # Rotas atualizadas
+Arquivos modificados:
+├─ src/assets/logo_cp.png            (novo — copiado do upload)
+├─ src/index.css                     (+ utilitário .bg-brand-gradient)
+├─ tailwind.config.ts                (+ backgroundImage brand-gradient)
+├─ src/components/DashboardLayout.tsx (logo no header, avatar gradiente)
+├─ src/components/AppSidebar.tsx     (tema dark + indicador ativo gradiente)
+└─ src/pages/Dashboard.tsx           (saudação + cards refatorados)
 ```
 
-## Detalhes Tecnicos
-
-### 1. Autenticacao (Login.tsx + AuthContext)
-- Tela de login com email/senha usando `supabase.auth.signInWithPassword`
-- AuthContext com `onAuthStateChange` (listener ANTES de `getSession`)
-- Ao logar, buscar perfil do usuario em `public.perfis` (permissoes) e chamar `public.is_admin()` via RPC para saber se eh admin
-- Armazenar no context: `user`, `perfil` (com pode_criar/editar/excluir), `isAdmin`
-
-### 2. Layout Dashboard (DashboardLayout + AppSidebar)
-- Sidebar com tema dark fixo (classe `dark` forcada no container da sidebar)
-- Itens: Dashboard, Organizacoes, Equipe
-- Icones Lucide: LayoutDashboard, Building2, Users
-- SidebarTrigger no header para colapsar/expandir
-- Usar NavLink para highlight da rota ativa
-
-### 3. Organizacoes (listagem + formulario)
-- **Listagem**: Query `select * from organizacoes`
-  - Se `isAdmin` = false, filtrar `where created_by = user.id` (feito via RLS no banco, mas tambem no query como fallback)
-  - Botoes Novo/Editar/Excluir condicionados a `perfil.pode_criar`, `perfil.pode_editar`, `perfil.pode_excluir`
-- **Formulario (OrganizacaoForm.tsx)**: Dialog/Sheet com Tabs (Shadcn)
-  - **Aba 1 - Geral**: nome, cnpj, slug (auto-gerado do nome), email, telefone
-  - **Aba 2 - Config IA**: prompt (textarea), evo_instancia, link_cardapio, url_cardapio_jina
-  - **Aba 3 - Endereco/Status**: logo_url, cidade_estado, endereco_completo, ativado (Switch), ativo (Switch), mensagem_boas_vindas
-- Ao salvar: `created_by` = `user.id` automaticamente (insert) 
-
-### 4. Equipe (Equipe.tsx)
-- Listar perfis da tabela `public.perfis`
-- Exibir nome, email, permissoes (pode_criar/editar/excluir)
-- Admin pode editar permissoes; usuario comum so visualiza
-
-### 5. Dashboard (Dashboard.tsx)
-- Cards com totais: organizacoes ativas, total equipe, etc.
-- Consultas simples ao Supabase
-
-### 6. Rotas (App.tsx)
-- `/login` → Login.tsx
-- `/` → redirect para `/dashboard`
-- `/dashboard` → Dashboard (protegida)
-- `/organizacoes` → Organizacoes (protegida)
-- `/equipe` → Equipe (protegida)
-- ProtectedRoute wrapper redireciona para `/login` se nao autenticado
-
-### 7. Slug Auto-gerado
-- Funcao utilitaria `generateSlug(nome)`: lowercase, remove acentos, substitui espacos por hifens
-
-### Premissas
-- As tabelas `organizacoes` e `perfis` ja existem no banco Supabase self-hosted
-- A funcao `public.is_admin()` ja existe no banco
-- RLS ja esta configurado no banco para multi-tenancy
+Nenhuma alteração de lógica/dados — apenas estilo, markup e novo asset. Nenhuma dependência nova.
 
