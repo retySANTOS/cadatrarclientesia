@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Search, ClipboardList } from 'lucide-react';
+import { Search, ClipboardList, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -78,6 +78,25 @@ export default function ClientesRelatorioGeral() {
   const [filtroStatus, setFiltroStatus] = useState('todos');
   const [busca, setBusca] = useState('');
 
+  const [sortCol, setSortCol] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  const handleSort = (col: string) => {
+    if (sortCol === col) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortCol(col);
+      setSortDir('desc');
+    }
+  };
+
+  const SortIcon = ({ col }: { col: string }) => {
+    if (sortCol !== col) return <ArrowUpDown className="inline ml-1 h-3 w-3 text-slate-300" />;
+    return sortDir === 'asc'
+      ? <ArrowUp className="inline ml-1 h-3 w-3 text-blue-500" />
+      : <ArrowDown className="inline ml-1 h-3 w-3 text-blue-500" />;
+  };
+
   const navigate = useNavigate();
 
   const filteredOrgs = useMemo(
@@ -117,12 +136,29 @@ export default function ClientesRelatorioGeral() {
   }, [clientes]);
 
   const filtrados = useMemo(() => {
-    return clientes.filter(c => {
+    const filtered = clientes.filter(c => {
       if (filtroStatus !== 'todos' && c.status_rfv !== filtroStatus) return false;
       if (busca && !(c.nome_cliente ?? '').toLowerCase().includes(busca.toLowerCase())) return false;
       return true;
     });
-  }, [clientes, filtroStatus, busca]);
+    if (!sortCol) return filtered;
+    return [...filtered].sort((a, b) => {
+      let valA: any;
+      let valB: any;
+      switch (sortCol) {
+        case 'nome': valA = (a.nome_cliente ?? '').toLowerCase(); valB = (b.nome_cliente ?? '').toLowerCase(); break;
+        case 'status': valA = a.status_rfv ?? ''; valB = b.status_rfv ?? ''; break;
+        case 'compras': valA = a.total_pedidos ?? 0; valB = b.total_pedidos ?? 0; break;
+        case 'ultima_compra': valA = a.ultima_compra ?? ''; valB = b.ultima_compra ?? ''; break;
+        case 'gasto_medio': valA = a.gasto_medio ?? 0; valB = b.gasto_medio ?? 0; break;
+        case 'gasto_total': valA = a.total_gasto ?? 0; valB = b.total_gasto ?? 0; break;
+        default: return 0;
+      }
+      if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [clientes, filtroStatus, busca, sortCol, sortDir]);
 
   return (
     <DashboardLayout>
@@ -220,13 +256,25 @@ export default function ClientesRelatorioGeral() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Nome</TableHead>
-                          <TableHead>Status</TableHead>
+                          <TableHead className="cursor-pointer select-none hover:text-blue-600" onClick={() => handleSort('nome')}>
+                            Nome <SortIcon col="nome" />
+                          </TableHead>
+                          <TableHead className="cursor-pointer select-none hover:text-blue-600" onClick={() => handleSort('status')}>
+                            Status <SortIcon col="status" />
+                          </TableHead>
                           <TableHead>Celular</TableHead>
-                          <TableHead className="text-center">Compras</TableHead>
-                          <TableHead>Última compra</TableHead>
-                          <TableHead className="text-right">Gasto médio</TableHead>
-                          <TableHead className="text-right">Gasto total</TableHead>
+                          <TableHead className="text-center cursor-pointer select-none hover:text-blue-600" onClick={() => handleSort('compras')}>
+                            Compras <SortIcon col="compras" />
+                          </TableHead>
+                          <TableHead className="cursor-pointer select-none hover:text-blue-600" onClick={() => handleSort('ultima_compra')}>
+                            Última compra <SortIcon col="ultima_compra" />
+                          </TableHead>
+                          <TableHead className="text-right cursor-pointer select-none hover:text-blue-600" onClick={() => handleSort('gasto_medio')}>
+                            Gasto médio <SortIcon col="gasto_medio" />
+                          </TableHead>
+                          <TableHead className="text-right cursor-pointer select-none hover:text-blue-600" onClick={() => handleSort('gasto_total')}>
+                            Gasto total <SortIcon col="gasto_total" />
+                          </TableHead>
                           <TableHead className="w-12"></TableHead>
                         </TableRow>
                       </TableHeader>
