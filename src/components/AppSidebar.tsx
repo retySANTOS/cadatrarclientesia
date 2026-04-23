@@ -45,13 +45,14 @@ const productItems = [
 ];
 
 // Shared class strings for the dark theme
+// Larger touch targets on mobile (min-h-11 ≈ 44px, Apple HIG recommendation)
 const itemBase =
-  "relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-slate-400 transition-colors hover:bg-slate-900 hover:text-white";
+  "relative flex items-center gap-3 rounded-md px-3 py-3 md:py-2.5 min-h-11 md:min-h-0 text-sm text-slate-400 transition-colors hover:bg-slate-900 hover:text-white";
 const itemActive =
   "bg-slate-900 text-white font-medium before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-full before:bg-brand-gradient";
 
 const subItemBase =
-  "relative flex items-center gap-3 rounded-md px-3 py-2 text-sm text-slate-500 transition-colors hover:bg-slate-900 hover:text-white";
+  "relative flex items-center gap-3 rounded-md px-3 py-2.5 md:py-2 min-h-10 md:min-h-0 text-sm text-slate-500 transition-colors hover:bg-slate-900 hover:text-white";
 const subItemActive =
   "bg-slate-900 text-white font-medium before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-full before:bg-brand-gradient";
 
