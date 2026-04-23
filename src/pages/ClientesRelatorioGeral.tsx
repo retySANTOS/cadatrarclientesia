@@ -256,13 +256,25 @@ export default function ClientesRelatorioGeral() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Nome</TableHead>
-                          <TableHead>Status</TableHead>
+                          <TableHead className="cursor-pointer select-none hover:text-blue-600" onClick={() => handleSort('nome')}>
+                            Nome <SortIcon col="nome" />
+                          </TableHead>
+                          <TableHead className="cursor-pointer select-none hover:text-blue-600" onClick={() => handleSort('status')}>
+                            Status <SortIcon col="status" />
+                          </TableHead>
                           <TableHead>Celular</TableHead>
-                          <TableHead className="text-center">Compras</TableHead>
-                          <TableHead>Última compra</TableHead>
-                          <TableHead className="text-right">Gasto médio</TableHead>
-                          <TableHead className="text-right">Gasto total</TableHead>
+                          <TableHead className="text-center cursor-pointer select-none hover:text-blue-600" onClick={() => handleSort('compras')}>
+                            Compras <SortIcon col="compras" />
+                          </TableHead>
+                          <TableHead className="cursor-pointer select-none hover:text-blue-600" onClick={() => handleSort('ultima_compra')}>
+                            Última compra <SortIcon col="ultima_compra" />
+                          </TableHead>
+                          <TableHead className="text-right cursor-pointer select-none hover:text-blue-600" onClick={() => handleSort('gasto_medio')}>
+                            Gasto médio <SortIcon col="gasto_medio" />
+                          </TableHead>
+                          <TableHead className="text-right cursor-pointer select-none hover:text-blue-600" onClick={() => handleSort('gasto_total')}>
+                            Gasto total <SortIcon col="gasto_total" />
+                          </TableHead>
                           <TableHead className="w-12"></TableHead>
                         </TableRow>
                       </TableHeader>
