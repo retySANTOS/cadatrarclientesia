@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { LogOut } from 'lucide-react';
+import logoCp from '@/assets/logo_cp.png';
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
@@ -19,14 +20,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <AppSidebar />
         <div className="flex-1 flex flex-col">
           <header className="h-14 flex items-center justify-between border-b border-slate-200 px-6 bg-white">
-            <div className="flex items-center">
+            <div className="flex items-center gap-3">
               <SidebarTrigger />
-              <h1 className="ml-3 text-lg font-semibold text-slate-800">Proj Sistemas</h1>
+              <img src={logoCp} alt="CP" className="h-8 w-auto" />
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 outline-none">
-                  <div className="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-semibold text-sm">
+                  <div className="w-10 h-10 rounded-full bg-brand-gradient text-white flex items-center justify-center font-semibold text-sm shadow-sm">
                     {initial}
                   </div>
                 </button>
