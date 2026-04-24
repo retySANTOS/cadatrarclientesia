@@ -19,6 +19,7 @@ interface GplusRow {
   DATA_VENDA: string;
   HORA_VENDA: string;
   PRODUTO: string;
+  VALOR_ITEM?: number | string;
   VALOR_VENDA: number;
   VALOR_FINAL: number;
 }
@@ -28,7 +29,7 @@ interface PedidoImport {
   nome_cliente: string;
   whatsapp: string;
   data_venda: string;
-  itens: string[];
+  itens: { nome: string; quantidade: number; valor_unitario: number }[];
   valor_subtotal: number;
   valor_total: number;
   taxa_entrega: number;
@@ -77,7 +78,11 @@ export default function ImportacaoDados() {
           taxa_entrega: Number(row.VALOR_FINAL) - Number(row.VALOR_VENDA),
         });
       }
-      map.get(idVenda)!.itens.push(String(row.PRODUTO ?? '').trim());
+      map.get(idVenda)!.itens.push({
+        nome: String(row.PRODUTO ?? '').trim(),
+        quantidade: 1,
+        valor_unitario: row.VALOR_ITEM !== undefined && row.VALOR_ITEM !== '' ? Number(row.VALOR_ITEM) : 0,
+      });
     }
     return Array.from(map.values());
   };
@@ -135,11 +140,7 @@ export default function ImportacaoDados() {
         organizacao_id: selectedOrgId,
         whatsapp: p.whatsapp,
         nome_cliente: p.nome_cliente,
-        itens: p.itens.map(nome => ({
-          nome,
-          quantidade: 1,
-          valor_unitario: 0,
-        })),
+        itens: p.itens,
         valor_subtotal: p.valor_subtotal,
         taxa_entrega: p.taxa_entrega,
         valor_total: p.valor_total,
@@ -255,7 +256,7 @@ export default function ImportacaoDados() {
                           <TableCell>{p.nome_cliente}</TableCell>
                           <TableCell>{p.whatsapp}</TableCell>
                           <TableCell>{p.data_venda.split('T')[0].split('-').reverse().join('/')}</TableCell>
-                          <TableCell>{p.itens.join(' · ')}</TableCell>
+                          <TableCell>{p.itens.map(item => item.nome).join(' · ')}</TableCell>
                           <TableCell className="text-right">R$ {p.valor_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</TableCell>
                         </TableRow>
                       ))}
