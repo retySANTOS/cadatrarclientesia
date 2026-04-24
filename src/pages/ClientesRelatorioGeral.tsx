@@ -22,6 +22,7 @@ interface Organizacao {
   id: string;
   nome: string;
   modulos: Record<string, boolean> | null;
+  intervalo_campanhas_dias: number | null;
 }
 
 interface ClienteRFV {
@@ -80,6 +81,7 @@ export default function ClientesRelatorioGeral() {
 
   const [sortCol, setSortCol] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [campanhasMap, setCampanhasMap] = useState<Record<string, string | null>>({});
 
   const handleSort = (col: string) => {
     if (sortCol === col) {
@@ -105,7 +107,7 @@ export default function ClientesRelatorioGeral() {
   );
 
   useEffect(() => {
-    supabase.from('organizacao').select('id, nome, modulos').order('nome').then(({ data }) => {
+    supabase.from('organizacao').select('id, nome, modulos, intervalo_campanhas_dias').order('nome').then(({ data }) => {
       if (data) {
         const mapped = data.map((d: any) => ({ ...d, modulos: d.modulos as Record<string, boolean> | null }));
         setOrgs(mapped);
@@ -120,9 +122,17 @@ export default function ClientesRelatorioGeral() {
   useEffect(() => {
     if (!selectedOrg) return;
     setLoading(true);
-    supabase.rpc('calcular_rfv_clientes', { p_org_id: selectedOrg.id }).then(({ data, error }) => {
-      if (error) { toast.error('Erro ao carregar clientes'); setLoading(false); return; }
-      setClientes((data as ClienteRFV[]) ?? []);
+    Promise.all([
+      supabase.rpc('calcular_rfv_clientes', { p_org_id: selectedOrg.id }),
+      supabase.from('usuarios').select('whatsapp, ultima_campanha_recebida').eq('organizacao_id', selectedOrg.id),
+    ]).then(([rfvRes, usuariosRes]) => {
+      if (rfvRes.error) { toast.error('Erro ao carregar clientes'); setLoading(false); return; }
+      setClientes((rfvRes.data as ClienteRFV[]) ?? []);
+      const map: Record<string, string | null> = {};
+      for (const u of (usuariosRes.data ?? [])) {
+        map[u.whatsapp] = u.ultima_campanha_recebida ?? null;
+      }
+      setCampanhasMap(map);
       setLoading(false);
     });
   }, [selectedOrg]);
@@ -152,6 +162,7 @@ export default function ClientesRelatorioGeral() {
         case 'ultima_compra': valA = a.ultima_compra ?? ''; valB = b.ultima_compra ?? ''; break;
         case 'gasto_medio': valA = a.gasto_medio ?? 0; valB = b.gasto_medio ?? 0; break;
         case 'gasto_total': valA = a.total_gasto ?? 0; valB = b.total_gasto ?? 0; break;
+        case 'ultima_campanha': valA = campanhasMap[a.whatsapp] ?? ''; valB = campanhasMap[b.whatsapp] ?? ''; break;
         default: return 0;
       }
       if (valA < valB) return sortDir === 'asc' ? -1 : 1;
@@ -275,6 +286,10 @@ export default function ClientesRelatorioGeral() {
                           <TableHead className="text-right cursor-pointer select-none hover:text-blue-600" onClick={() => handleSort('gasto_total')}>
                             Gasto total <SortIcon col="gasto_total" />
                           </TableHead>
+                          <TableHead className="cursor-pointer select-none hover:text-blue-600" onClick={() => handleSort('ultima_campanha')}>
+                            Última campanha <SortIcon col="ultima_campanha" />
+                          </TableHead>
+                          <TableHead className="text-center">Próxima campanha</TableHead>
                           <TableHead className="w-12"></TableHead>
                         </TableRow>
                       </TableHeader>
@@ -299,6 +314,22 @@ export default function ClientesRelatorioGeral() {
                             </TableCell>
                             <TableCell className="text-right font-medium text-emerald-600">
                               R$ {Number(c.total_gasto ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell className="text-slate-600 whitespace-nowrap">
+                              {campanhasMap[c.whatsapp]
+                                ? format(new Date(campanhasMap[c.whatsapp]!), 'dd/MM/yyyy', { locale: ptBR })
+                                : '—'}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {(() => {
+                                const ultima = campanhasMap[c.whatsapp];
+                                const intervalo = selectedOrg?.intervalo_campanhas_dias ?? 15;
+                                if (!ultima) return <span className="text-emerald-600 text-xs font-medium">Disponível</span>;
+                                const diasPassados = Math.floor((Date.now() - new Date(ultima).getTime()) / 86400000);
+                                const restam = intervalo - diasPassados;
+                                if (restam <= 0) return <span className="text-emerald-600 text-xs font-medium">Disponível</span>;
+                                return <span className="text-amber-600 text-xs font-medium">{restam}d</span>;
+                              })()}
                             </TableCell>
                             <TableCell>
                               <Tooltip>
