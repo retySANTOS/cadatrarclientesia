@@ -55,11 +55,20 @@ interface TopProduto {
 
 function parseItens(itensStr: string | null | any[]): ItemPedido[] {
   if (!itensStr) return [];
-  if (Array.isArray(itensStr)) return itensStr;
-  try {
-    const parsed = JSON.parse(itensStr);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch { return []; }
+  let arr: any[] = [];
+  if (Array.isArray(itensStr)) {
+    arr = itensStr;
+  } else {
+    try {
+      const parsed = JSON.parse(itensStr);
+      arr = Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
+  }
+  return arr.map(item => ({
+    nome: item.nome ?? '',
+    quantidade: Number(item.quantidade) || 1,
+    valor_unitario: Number(item.valor_unitario) || 0,
+  }));
 }
 
 const PERIODOS = [
