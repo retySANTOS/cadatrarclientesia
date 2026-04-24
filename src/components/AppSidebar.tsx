@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Users, BarChart3, LogOut, ChevronDown, FileText, Megaphone, PackageSearch, Package, ShoppingBag, UserCheck, Eye, AlertTriangle, Star, BarChart, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, BarChart3, LogOut, ChevronDown, FileText, Megaphone, PackageSearch, Package, ShoppingBag, UserCheck, Eye, AlertTriangle, Star, BarChart, ClipboardList, Database, Upload } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,6 +32,10 @@ const clienteItems = [
   { title: 'Análise avançada', url: '/clientes/analise-avancada', icon: BarChart },
 ];
 
+const dadosItems = [
+  { title: 'Importação Gplus', url: '/dados/importacao', icon: Upload },
+];
+
 const reportItems = [
   { title: 'Consumo IA', url: '/relatorios', icon: FileText },
   { title: 'Consumo Detalhado', url: '/consumo-detalhado', icon: FileText },
@@ -61,9 +65,11 @@ export function AppSidebar() {
   const collapsed = state === 'collapsed';
   const location = useLocation();
   const { signOut, user } = useAuth();
+  const isDadosActive = dadosItems.some(i => location.pathname === i.url);
   const isReportActive = reportItems.some(i => location.pathname === i.url);
   const isProductActive = productItems.some(i => location.pathname === i.url);
   const isClienteActive = clienteItems.some(i => location.pathname === i.url);
+  const [dadosOpen, setDadosOpen] = useState(isDadosActive);
   const [reportsOpen, setReportsOpen] = useState(isReportActive);
   const [productsOpen, setProductsOpen] = useState(isProductActive);
   const [clientesOpen, setClientesOpen] = useState(isClienteActive);
@@ -158,6 +164,47 @@ export function AppSidebar() {
               <CollapsibleContent>
                 <SidebarMenu className="ml-4 mt-1 border-l border-slate-800 pl-2">
                   {productItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild>
+                        <NavLink
+                          to={item.url}
+                          className={subItemBase}
+                          activeClassName={subItemActive}
+                        >
+                          <item.icon className="h-5 w-5 shrink-0" />
+                          <span>{item.title}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </CollapsibleContent>
+            )}
+          </Collapsible>
+        </SidebarGroup>
+
+        {/* Dados submenu */}
+        <SidebarGroup>
+          <Collapsible open={dadosOpen} onOpenChange={setDadosOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                className={`relative flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-slate-900 hover:text-white ${
+                  isDadosActive ? 'bg-slate-900 text-white font-medium' : 'text-slate-400'
+                }`}
+              >
+                <Database className="h-5 w-5 shrink-0" />
+                {!collapsed && (
+                  <>
+                    <span className="flex-1 text-left">Dados</span>
+                    <ChevronDown className={`h-3 w-3 transition-transform ${dadosOpen ? 'rotate-180' : ''}`} />
+                  </>
+                )}
+              </button>
+            </CollapsibleTrigger>
+            {!collapsed && (
+              <CollapsibleContent>
+                <SidebarMenu className="ml-4 mt-1 border-l border-slate-800 pl-2">
+                  {dadosItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild>
                         <NavLink
