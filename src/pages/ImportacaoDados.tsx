@@ -256,7 +256,7 @@ export default function ImportacaoDados() {
                           <TableCell>{p.nome_cliente}</TableCell>
                           <TableCell>{p.whatsapp}</TableCell>
                           <TableCell>{p.data_venda.split('T')[0].split('-').reverse().join('/')}</TableCell>
-                          <TableCell>{p.itens.map(item => item.nome).join(' · ')}</TableCell>
+                          <TableCell className="text-xs text-slate-600 max-w-[180px]"><span className="line-clamp-2">{p.itens.map(i => i.nome).join(' · ')}</span></TableCell>
                           <TableCell className="text-right">R$ {p.valor_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</TableCell>
                         </TableRow>
                       ))}
