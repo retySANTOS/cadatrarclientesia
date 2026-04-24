@@ -53,8 +53,9 @@ interface TopProduto {
   total_receita: number;
 }
 
-function parseItens(itensStr: string | null): ItemPedido[] {
+function parseItens(itensStr: string | null | any[]): ItemPedido[] {
   if (!itensStr) return [];
+  if (Array.isArray(itensStr)) return itensStr;
   try {
     const parsed = JSON.parse(itensStr);
     return Array.isArray(parsed) ? parsed : [];
