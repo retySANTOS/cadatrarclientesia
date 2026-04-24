@@ -286,6 +286,10 @@ export default function ClientesRelatorioGeral() {
                           <TableHead className="text-right cursor-pointer select-none hover:text-blue-600" onClick={() => handleSort('gasto_total')}>
                             Gasto total <SortIcon col="gasto_total" />
                           </TableHead>
+                          <TableHead className="cursor-pointer select-none hover:text-blue-600" onClick={() => handleSort('ultima_campanha')}>
+                            Última campanha <SortIcon col="ultima_campanha" />
+                          </TableHead>
+                          <TableHead className="text-center">Próxima campanha</TableHead>
                           <TableHead className="w-12"></TableHead>
                         </TableRow>
                       </TableHeader>
@@ -310,6 +314,22 @@ export default function ClientesRelatorioGeral() {
                             </TableCell>
                             <TableCell className="text-right font-medium text-emerald-600">
                               R$ {Number(c.total_gasto ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell className="text-slate-600 whitespace-nowrap">
+                              {campanhasMap[c.whatsapp]
+                                ? format(new Date(campanhasMap[c.whatsapp]!), 'dd/MM/yyyy', { locale: ptBR })
+                                : '—'}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {(() => {
+                                const ultima = campanhasMap[c.whatsapp];
+                                const intervalo = selectedOrg?.intervalo_campanhas_dias ?? 15;
+                                if (!ultima) return <span className="text-emerald-600 text-xs font-medium">Disponível</span>;
+                                const diasPassados = Math.floor((Date.now() - new Date(ultima).getTime()) / 86400000);
+                                const restam = intervalo - diasPassados;
+                                if (restam <= 0) return <span className="text-emerald-600 text-xs font-medium">Disponível</span>;
+                                return <span className="text-amber-600 text-xs font-medium">{restam}d</span>;
+                              })()}
                             </TableCell>
                             <TableCell>
                               <Tooltip>
