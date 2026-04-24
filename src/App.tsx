@@ -21,6 +21,7 @@ import ClientesRelatorioGeral from "./pages/ClientesRelatorioGeral";
 import ClientesEmRisco from "./pages/ClientesEmRisco";
 import ClientesTop from "./pages/ClientesTop";
 import ClientesAnaliseAvancada from "./pages/ClientesAnaliseAvancada";
+import ImportacaoDados from "./pages/ImportacaoDados";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/clientes/em-risco" element={<ProtectedRoute><ClientesEmRisco /></ProtectedRoute>} />
             <Route path="/clientes/top" element={<ProtectedRoute><ClientesTop /></ProtectedRoute>} />
             <Route path="/clientes/analise-avancada" element={<ProtectedRoute><ClientesAnaliseAvancada /></ProtectedRoute>} />
+            <Route path="/dados/importacao" element={<ProtectedRoute><ImportacaoDados /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
