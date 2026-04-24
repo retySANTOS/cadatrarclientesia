@@ -22,6 +22,7 @@ interface Organizacao {
   id: string;
   nome: string;
   modulos: Record<string, boolean> | null;
+  intervalo_campanhas_dias: number | null;
 }
 
 interface ClienteRFV {
@@ -80,6 +81,7 @@ export default function ClientesRelatorioGeral() {
 
   const [sortCol, setSortCol] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [campanhasMap, setCampanhasMap] = useState<Record<string, string | null>>({});
 
   const handleSort = (col: string) => {
     if (sortCol === col) {
@@ -105,7 +107,7 @@ export default function ClientesRelatorioGeral() {
   );
 
   useEffect(() => {
-    supabase.from('organizacao').select('id, nome, modulos').order('nome').then(({ data }) => {
+    supabase.from('organizacao').select('id, nome, modulos, intervalo_campanhas_dias').order('nome').then(({ data }) => {
       if (data) {
         const mapped = data.map((d: any) => ({ ...d, modulos: d.modulos as Record<string, boolean> | null }));
         setOrgs(mapped);
@@ -120,9 +122,17 @@ export default function ClientesRelatorioGeral() {
   useEffect(() => {
     if (!selectedOrg) return;
     setLoading(true);
-    supabase.rpc('calcular_rfv_clientes', { p_org_id: selectedOrg.id }).then(({ data, error }) => {
-      if (error) { toast.error('Erro ao carregar clientes'); setLoading(false); return; }
-      setClientes((data as ClienteRFV[]) ?? []);
+    Promise.all([
+      supabase.rpc('calcular_rfv_clientes', { p_org_id: selectedOrg.id }),
+      supabase.from('usuarios').select('whatsapp, ultima_campanha_recebida').eq('organizacao_id', selectedOrg.id),
+    ]).then(([rfvRes, usuariosRes]) => {
+      if (rfvRes.error) { toast.error('Erro ao carregar clientes'); setLoading(false); return; }
+      setClientes((rfvRes.data as ClienteRFV[]) ?? []);
+      const map: Record<string, string | null> = {};
+      for (const u of (usuariosRes.data ?? [])) {
+        map[u.whatsapp] = u.ultima_campanha_recebida ?? null;
+      }
+      setCampanhasMap(map);
       setLoading(false);
     });
   }, [selectedOrg]);
@@ -152,6 +162,7 @@ export default function ClientesRelatorioGeral() {
         case 'ultima_compra': valA = a.ultima_compra ?? ''; valB = b.ultima_compra ?? ''; break;
         case 'gasto_medio': valA = a.gasto_medio ?? 0; valB = b.gasto_medio ?? 0; break;
         case 'gasto_total': valA = a.total_gasto ?? 0; valB = b.total_gasto ?? 0; break;
+        case 'ultima_campanha': valA = campanhasMap[a.whatsapp] ?? ''; valB = campanhasMap[b.whatsapp] ?? ''; break;
         default: return 0;
       }
       if (valA < valB) return sortDir === 'asc' ? -1 : 1;
