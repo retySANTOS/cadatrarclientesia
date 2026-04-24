@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Upload, Users, ShoppingBag, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, Users, ShoppingBag, CheckCircle, AlertCircle, Loader2, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
@@ -198,6 +198,36 @@ export default function ImportacaoDados() {
               </label>
 
               {!selectedOrgId && <p className="text-sm text-destructive">⚠️ Selecione uma organização antes de fazer o upload</p>}
+
+              <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 space-y-3">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold text-blue-700">Não usa o Gplus?</p>
+                    <p className="text-xs text-blue-600">Baixe o template, apague a linha de exemplo e preencha com os dados reais. Cada linha = 1 item do pedido. Pedidos com vários itens repetem o mesmo ID_VENDA.</p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 w-full sm:w-auto border-blue-200 text-blue-600 hover:bg-blue-100"
+                  onClick={() => {
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.aoa_to_sheet([
+                      ['ID_VENDA','NOME_CLIENTE','CELULAR','DATA_VENDA','HORA_VENDA','PRODUTO','VALOR_ITEM','VALOR_VENDA','VALOR_FINAL'],
+                      ['1001','João Silva (EXEMPLO — apague esta linha)','11999990000','2025-03-15','18:30:00','Frango Grelhado + Arroz','45.00','45.00','50.00'],
+                    ]);
+                    ws['!cols'] = [
+                      {wch:10},{wch:35},{wch:15},{wch:12},{wch:12},{wch:30},{wch:13},{wch:13},{wch:13}
+                    ];
+                    XLSX.utils.book_append_sheet(wb, ws, 'Importacao');
+                    XLSX.writeFile(wb, 'template_importacao.xlsx');
+                  }}
+                >
+                  <Download className="h-4 w-4" /> Baixar template
+                </Button>
+              </div>
 
               <div className="rounded-lg border border-border bg-background p-4">
                 <h2 className="mb-3 font-semibold text-foreground">Como exportar do Gplus</h2>
