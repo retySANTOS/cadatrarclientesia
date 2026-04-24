@@ -19,6 +19,7 @@ interface GplusRow {
   DATA_VENDA: string;
   HORA_VENDA: string;
   PRODUTO: string;
+  VALOR_ITEM?: number | string;
   VALOR_VENDA: number;
   VALOR_FINAL: number;
 }
@@ -77,7 +78,11 @@ export default function ImportacaoDados() {
           taxa_entrega: Number(row.VALOR_FINAL) - Number(row.VALOR_VENDA),
         });
       }
-      map.get(idVenda)!.itens.push(String(row.PRODUTO ?? '').trim());
+      map.get(idVenda)!.itens.push({
+        nome: String(row.PRODUTO ?? '').trim(),
+        quantidade: 1,
+        valor_unitario: row.VALOR_ITEM !== undefined && row.VALOR_ITEM !== '' ? Number(row.VALOR_ITEM) : 0,
+      });
     }
     return Array.from(map.values());
   };
