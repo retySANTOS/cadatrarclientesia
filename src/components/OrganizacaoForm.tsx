@@ -189,6 +189,28 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
   const [saveTemplateName, setSaveTemplateName] = useState('');
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<{id: string, nome: string, texto: string} | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  const handleLogoUpload = async (file: File) => {
+    if (!file) return;
+    setUploadingLogo(true);
+    const ext = file.name.split('.').pop();
+    const fileName = `logos/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage
+      .from('campanhas-imagens')
+      .upload(fileName, file, { upsert: true });
+    if (error) {
+      toast.error('Erro ao fazer upload da logo');
+      setUploadingLogo(false);
+      return;
+    }
+    const { data: urlData } = supabase.storage
+      .from('campanhas-imagens')
+      .getPublicUrl(fileName);
+    update('logo_url', urlData.publicUrl);
+    setUploadingLogo(false);
+    toast.success('Logo enviada com sucesso!');
+  };
 
   const reloadTemplates = async (orgId: string) => {
     const { data } = await supabase.from('avisos_templates')
@@ -506,8 +528,22 @@ export function OrganizacaoForm({ open, onOpenChange, organizacao, onSaved }: Pr
 
           <TabsContent value="local" className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label>Logo URL</Label>
-              <Input value={form.logo_url} onChange={(e) => update('logo_url', e.target.value)} />
+              <Label>Logo da Empresa</Label>
+              <div className="space-y-2">
+                {form.logo_url && (
+                  <img src={form.logo_url} alt="Logo atual" className="h-16 w-auto object-contain rounded border p-1" />
+                )}
+                <Input
+                  type="file"
+                  accept="image/*"
+                  disabled={uploadingLogo}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleLogoUpload(file);
+                  }}
+                />
+                {uploadingLogo && <p className="text-xs text-muted-foreground">Enviando logo...</p>}
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Cidade / Estado</Label>
