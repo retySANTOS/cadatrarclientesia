@@ -6,9 +6,10 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ totalOrgs: 0, orgsAtivas: 0, totalEquipe: 0 });
-  const { user } = useAuth();
+  const { user, perfil } = useAuth();
 
   const firstName = (() => {
+    if (perfil?.nome) return perfil.nome.split(' ')[0];
     const local = user?.email?.split('@')[0] ?? '';
     const raw = local.split(/[._-]/)[0] || 'usuário';
     return raw.charAt(0).toUpperCase() + raw.slice(1);
