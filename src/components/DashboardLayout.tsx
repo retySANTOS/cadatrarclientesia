@@ -30,16 +30,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <header className="h-14 flex items-center justify-between border-b border-slate-200 px-6 bg-white">
             <div className="flex items-center gap-3">
               <SidebarTrigger />
-              {!isAdmin && orgData ? (
-                <div className="flex items-center gap-2">
-                  {orgData.logo_url && (
-                    <img src={orgData.logo_url} alt={orgData.nome} className="h-8 w-auto" />
-                  )}
-                  <span className="font-semibold text-slate-700">{orgData.nome}</span>
-                </div>
-              ) : (
-                <img src={logoCp} alt="CP" className="h-8 w-auto" />
-              )}
+              <img src={logoCp} alt="CP" className="h-8 w-auto" />
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
