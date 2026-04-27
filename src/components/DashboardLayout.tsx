@@ -9,10 +9,18 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LogOut } from 'lucide-react';
 import logoCp from '@/assets/logo_cp.png';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, signOut } = useAuth();
-  const initial = user?.email?.charAt(0).toUpperCase() ?? 'U';
+  const { user, signOut, perfil, organizacaoId, isAdmin } = useAuth();
+  const [orgData, setOrgData] = useState<{ nome: string; logo_url: string } | null>(null);
+  useEffect(() => {
+    if (!organizacaoId) return;
+    supabase.from('organizacao').select('nome, logo_url').eq('id', organizacaoId).single()
+      .then(({ data }) => { if (data) setOrgData(data as { nome: string; logo_url: string }); });
+  }, [organizacaoId]);
+  const initial = ((perfil?.nome ?? user?.email ?? 'U').charAt(0)).toUpperCase();
 
   return (
     <SidebarProvider>
@@ -22,7 +30,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <header className="h-14 flex items-center justify-between border-b border-slate-200 px-6 bg-white">
             <div className="flex items-center gap-3">
               <SidebarTrigger />
-              <img src={logoCp} alt="CP" className="h-8 w-auto" />
+              {!isAdmin && orgData ? (
+                <div className="flex items-center gap-2">
+                  {orgData.logo_url && (
+                    <img src={orgData.logo_url} alt={orgData.nome} className="h-8 w-auto" />
+                  )}
+                  <span className="font-semibold text-slate-700">{orgData.nome}</span>
+                </div>
+              ) : (
+                <img src={logoCp} alt="CP" className="h-8 w-auto" />
+              )}
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -33,7 +50,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <div className="px-3 py-2 text-xs text-muted-foreground truncate">{user?.email}</div>
+                <div className="px-3 py-2 text-xs text-muted-foreground truncate">{perfil?.nome ?? user?.email}</div>
                 <DropdownMenuItem onClick={signOut} className="gap-2 text-red-600 cursor-pointer">
                   <LogOut className="h-4 w-4" /> Sair
                 </DropdownMenuItem>
