@@ -9,6 +9,7 @@ export interface Perfil {
   pode_criar: boolean;
   pode_editar: boolean;
   pode_excluir: boolean;
+  organizacao_id?: string | null;
 }
 
 interface AuthContextType {
