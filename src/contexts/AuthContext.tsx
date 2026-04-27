@@ -9,6 +9,7 @@ export interface Perfil {
   pode_criar: boolean;
   pode_editar: boolean;
   pode_excluir: boolean;
+  organizacao_id?: string | null;
 }
 
 interface AuthContextType {
@@ -16,6 +17,7 @@ interface AuthContextType {
   user: User | null;
   perfil: Perfil | null;
   isAdmin: boolean;
+  organizacaoId: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -28,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [organizacaoId, setOrganizacaoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchPerfilAndAdmin = async (userId: string) => {
@@ -38,7 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ]);
 
       if (perfilRes.data) {
-        setPerfil(perfilRes.data as Perfil);
+        const p = perfilRes.data as Perfil;
+        setPerfil(p);
+        setOrganizacaoId(p.organizacao_id ?? null);
       }
       if (adminRes.data !== null) {
         setIsAdmin(!!adminRes.data);
@@ -59,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           setPerfil(null);
           setIsAdmin(false);
+          setOrganizacaoId(null);
         }
         setLoading(false);
       }
@@ -85,10 +91,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setPerfil(null);
     setIsAdmin(false);
+    setOrganizacaoId(null);
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, perfil, isAdmin, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user, perfil, isAdmin, organizacaoId, loading, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
