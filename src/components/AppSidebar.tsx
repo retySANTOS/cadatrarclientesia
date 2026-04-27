@@ -15,7 +15,8 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 const mainItems = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
@@ -64,7 +65,13 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const location = useLocation();
-  const { signOut, user, isAdmin } = useAuth();
+  const { signOut, user, isAdmin, organizacaoId } = useAuth();
+  const [orgData, setOrgData] = useState<{ nome: string; logo_url: string } | null>(null);
+  useEffect(() => {
+    if (!organizacaoId) return;
+    supabase.from('organizacao').select('nome, logo_url').eq('id', organizacaoId).single()
+      .then(({ data }) => { if (data) setOrgData(data as { nome: string; logo_url: string }); });
+  }, [organizacaoId]);
   const isDadosActive = dadosItems.some(i => location.pathname === i.url);
   const isReportActive = reportItems.some(i => location.pathname === i.url);
   const isProductActive = productItems.some(i => location.pathname === i.url);
@@ -78,8 +85,17 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-slate-800 bg-slate-950 [&[data-state]]:bg-slate-950">
       <SidebarContent className="bg-slate-950">
         {!collapsed && (
-          <div className="flex justify-center pt-6 pb-4">
-            <img src={logo} alt="Proj Sistemas" className="w-28 mx-auto" />
+          <div className="flex flex-col items-center justify-center pt-6 pb-4 gap-2">
+            {!isAdmin && orgData ? (
+              <>
+                {orgData.logo_url && (
+                  <img src={orgData.logo_url} alt={orgData.nome} className="max-h-16 w-auto max-w-[120px] object-contain" />
+                )}
+                <span className="text-sm font-semibold text-slate-200 text-center px-2">{orgData.nome}</span>
+              </>
+            ) : (
+              <img src={logo} alt="Proj Sistemas" className="w-28 mx-auto" />
+            )}
           </div>
         )}
         <SidebarGroup>
