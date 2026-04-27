@@ -84,7 +84,10 @@ export function AppSidebar() {
         )}
         <SidebarGroup>
           <SidebarMenu>
-            {mainItems.filter(item => isAdmin || !['Organizações', 'Equipe'].includes(item.title)).map((item) => (
+            {mainItems
+              .filter(item => isAdmin || item.title !== 'Equipe')
+              .map(item => !isAdmin && item.title === 'Organizações' ? { ...item, title: 'Minha Empresa' } : item)
+              .map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
                   <NavLink
@@ -245,7 +248,7 @@ export function AppSidebar() {
             {!collapsed && (
               <CollapsibleContent>
                 <SidebarMenu className="ml-4 mt-1 border-l border-slate-800 pl-2">
-                  {reportItems.map((item) => (
+                  {reportItems.filter(item => isAdmin || item.title === 'Feedbacks').map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild>
                         <NavLink
