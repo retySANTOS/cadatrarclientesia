@@ -64,7 +64,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const location = useLocation();
-  const { signOut, user } = useAuth();
+  const { signOut, user, isAdmin } = useAuth();
   const isDadosActive = dadosItems.some(i => location.pathname === i.url);
   const isReportActive = reportItems.some(i => location.pathname === i.url);
   const isProductActive = productItems.some(i => location.pathname === i.url);
@@ -84,7 +84,7 @@ export function AppSidebar() {
         )}
         <SidebarGroup>
           <SidebarMenu>
-            {mainItems.map((item) => (
+            {mainItems.filter(item => isAdmin || !['Organizações', 'Equipe'].includes(item.title)).map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
                   <NavLink
